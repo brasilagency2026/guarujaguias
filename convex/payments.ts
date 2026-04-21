@@ -1,8 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
 
-// Called from MercadoPago webhook via HTTP action
+async function requireAuth(ctx: any): Promise<string> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Não autenticado");
+  return identity.subject;
+}
+
 export const handleSubscriptionUpdate = mutation({
   args: {
     mpSubscriptionId: v.string(),
@@ -13,7 +17,6 @@ export const handleSubscriptionUpdate = mutation({
   handler: async (ctx, args) => {
     const businessId = args.externalReference.replace("business_", "") as any;
 
-    // Find existing subscription
     const existing = await ctx.db
       .query("subscriptions")
       .withIndex("by_mp_subscription", (q) => q.eq("mpSubscriptionId", args.mpSubscriptionId))
@@ -29,7 +32,6 @@ export const handleSubscriptionUpdate = mutation({
         updatedAt: now,
       });
     } else {
-      // Use typed query instead of db.get() to avoid union type issues
       const business = await ctx.db
         .query("businesses")
         .filter((q) => q.eq(q.field("_id"), businessId))
@@ -52,10 +54,7 @@ export const handleSubscriptionUpdate = mutation({
       });
     }
 
-    // Update business plan based on subscription status
     const isActive = args.mpStatus === "authorized";
-
-    // Use typed query to avoid union type on db.get()
     const business = await ctx.db
       .query("businesses")
       .filter((q) => q.eq(q.field("_id"), businessId))
@@ -85,16 +84,13 @@ export const recordPayment = mutation({
       .query("subscriptions")
       .withIndex("by_mp_subscription", (q) => q.eq("mpSubscriptionId", args.mpSubscriptionId))
       .unique();
-
     if (!sub) return;
 
-    // Idempotency check
     const existing = await ctx.db
       .query("paymentHistory")
       .withIndex("by_subscription", (q) => q.eq("subscriptionId", sub._id))
       .filter((q) => q.eq(q.field("mpPaymentId"), args.mpPaymentId))
       .unique();
-
     if (existing) return;
 
     await ctx.db.insert("paymentHistory", {
@@ -112,15 +108,13 @@ export const recordPayment = mutation({
 export const getMySubscription = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) return null;
+    const clerkId = await requireAuth(ctx);
 
     const sub = await ctx.db
       .query("subscriptions")
-      .withIndex("by_owner", (q) => q.eq("ownerId", userId))
+      .withIndex("by_owner", (q) => q.eq("ownerId", clerkId))
       .order("desc")
       .first();
-
     if (!sub) return null;
 
     const history = await ctx.db
@@ -136,22 +130,19 @@ export const getMySubscription = query({
 export const cancelSubscription = mutation({
   args: { subscriptionId: v.id("subscriptions") },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Não autenticado");
+    const clerkId = await requireAuth(ctx);
 
     const sub = await ctx.db
       .query("subscriptions")
       .filter((q) => q.eq(q.field("_id"), args.subscriptionId))
       .unique();
-
-    if (!sub || sub.ownerId !== userId) throw new Error("Sem permissão");
+    if (!sub || sub.ownerId !== clerkId) throw new Error("Sem permissão");
 
     await ctx.db.patch(args.subscriptionId, {
       mpStatus: "cancelled",
       cancelledAt: Date.now(),
       updatedAt: Date.now(),
     });
-
     await ctx.db.patch(sub.businessId, { plan: "free", updatedAt: Date.now() });
   },
 });

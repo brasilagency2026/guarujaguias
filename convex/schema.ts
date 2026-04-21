@@ -1,32 +1,24 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
-import { authTables } from "@convex-dev/auth/server";
+
+// With Clerk, auth is handled externally — no authTables needed.
+// User identity comes from ctx.auth.getUserIdentity() in mutations/queries.
 
 export default defineSchema({
-  ...authTables,
 
   // ─── BUSINESSES ────────────────────────────────────────────────
   businesses: defineTable({
-    // Identity
     name: v.string(),
-    slug: v.string(),           // SEO-friendly slug: "cantinho-do-pescador"
-    ownerId: v.id("users"),
+    slug: v.string(),
+    ownerId: v.string(),          // Clerk user ID (e.g. "user_2abc123")
 
-    // Category & Type
     category: v.union(
-      v.literal("restaurante"),
-      v.literal("hospedagem"),
-      v.literal("beleza"),
-      v.literal("turismo"),
-      v.literal("loja"),
-      v.literal("saude"),
-      v.literal("cultura"),
-      v.literal("servicos"),
-      v.literal("eventos")
+      v.literal("restaurante"), v.literal("hospedagem"), v.literal("beleza"),
+      v.literal("turismo"), v.literal("loja"), v.literal("saude"),
+      v.literal("cultura"), v.literal("servicos"), v.literal("eventos")
     ),
     subcategory: v.optional(v.string()),
 
-    // Location
     address: v.string(),
     neighborhood: v.string(),
     city: v.literal("Guarujá"),
@@ -35,28 +27,22 @@ export default defineSchema({
     lat: v.number(),
     lng: v.number(),
 
-    // Contact
     whatsapp: v.string(),
     phone: v.optional(v.string()),
     email: v.optional(v.string()),
-    website: v.optional(v.string()),     // external URL if they have one
-
-    // Social
+    website: v.optional(v.string()),
     instagram: v.optional(v.string()),
     facebook: v.optional(v.string()),
     tiktok: v.optional(v.string()),
 
-    // Content
     description: v.string(),
-    shortDescription: v.string(),        // max 120 chars for cards
+    shortDescription: v.string(),
     tags: v.array(v.string()),
 
-    // Media (Cloudflare Images IDs)
     logoImageId: v.optional(v.string()),
     coverImageId: v.optional(v.string()),
     galleryImageIds: v.array(v.string()),
 
-    // Hours
     openingHours: v.optional(v.object({
       monday:    v.optional(v.object({ open: v.string(), close: v.string(), closed: v.boolean() })),
       tuesday:   v.optional(v.object({ open: v.string(), close: v.string(), closed: v.boolean() })),
@@ -67,29 +53,21 @@ export default defineSchema({
       sunday:    v.optional(v.object({ open: v.string(), close: v.string(), closed: v.boolean() })),
     })),
 
-    // Mini-site
     hasMiniSite: v.boolean(),
     miniSiteConfig: v.optional(v.id("miniSiteConfigs")),
 
-    // Status
     status: v.union(
-      v.literal("pending"),      // awaiting admin approval
-      v.literal("active"),       // live on portal
-      v.literal("paused"),       // temporarily hidden
-      v.literal("suspended"),    // payment issue
-      v.literal("deleted")       // soft delete
+      v.literal("pending"), v.literal("active"), v.literal("paused"),
+      v.literal("suspended"), v.literal("deleted")
     ),
 
-    // Plan
     plan: v.union(v.literal("free"), v.literal("pro")),
-    planExpiresAt: v.optional(v.number()),  // timestamp
+    planExpiresAt: v.optional(v.number()),
 
-    // Stats
     viewCount: v.number(),
     clickWhatsapp: v.number(),
     clickWebsite: v.number(),
 
-    // SEO
     metaTitle: v.optional(v.string()),
     metaDescription: v.optional(v.string()),
 
@@ -109,86 +87,49 @@ export default defineSchema({
   // ─── MINI-SITE CONFIGS ─────────────────────────────────────────
   miniSiteConfigs: defineTable({
     businessId: v.id("businesses"),
-
-    // Design
     template: v.union(
-      v.literal("restaurante"),
-      v.literal("hospedagem"),
-      v.literal("beleza"),
-      v.literal("turismo"),
-      v.literal("loja"),
-      v.literal("servicos")
+      v.literal("restaurante"), v.literal("hospedagem"), v.literal("beleza"),
+      v.literal("turismo"), v.literal("loja"), v.literal("servicos")
     ),
-    primaryColor: v.string(),   // hex
-    secondaryColor: v.string(), // hex
+    primaryColor: v.string(),
+    secondaryColor: v.string(),
     fontStyle: v.union(v.literal("modern"), v.literal("elegant"), v.literal("bold")),
-
-    // Features enabled
     features: v.object({
-      scheduling: v.boolean(),
-      whatsappButton: v.boolean(),
-      photoCarousel: v.boolean(),
-      serviceList: v.boolean(),
-      map: v.boolean(),
-      socialLinks: v.boolean(),
-      reviews: v.boolean(),
-      promotions: v.boolean(),
-      menu: v.boolean(),         // for restaurants
-      roomTypes: v.boolean(),    // for hotels
+      scheduling: v.boolean(), whatsappButton: v.boolean(), photoCarousel: v.boolean(),
+      serviceList: v.boolean(), map: v.boolean(), socialLinks: v.boolean(),
+      reviews: v.boolean(), promotions: v.boolean(), menu: v.boolean(), roomTypes: v.boolean(),
     }),
-
-    // Services / Menu items
     services: v.array(v.object({
-      id: v.string(),
-      name: v.string(),
-      description: v.optional(v.string()),
-      price: v.optional(v.number()),
-      priceNote: v.optional(v.string()),  // "a partir de", "por pessoa"
-      imageId: v.optional(v.string()),
+      id: v.string(), name: v.string(),
+      description: v.optional(v.string()), price: v.optional(v.number()),
+      priceNote: v.optional(v.string()), imageId: v.optional(v.string()),
       category: v.optional(v.string()),
     })),
-
-    // Promotions
     promotions: v.optional(v.array(v.object({
-      title: v.string(),
-      description: v.string(),
-      discount: v.optional(v.string()),
-      validUntil: v.optional(v.number()),
+      title: v.string(), description: v.string(),
+      discount: v.optional(v.string()), validUntil: v.optional(v.number()),
       imageId: v.optional(v.string()),
     }))),
-
-    // Custom sections
     customHtml: v.optional(v.string()),
-
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_business", ["businessId"]),
+  }).index("by_business", ["businessId"]),
 
-  // ─── SCHEDULING ────────────────────────────────────────────────
+  // ─── APPOINTMENTS ──────────────────────────────────────────────
   appointments: defineTable({
     businessId: v.id("businesses"),
     serviceId: v.optional(v.string()),
-
-    // Customer
     customerName: v.string(),
     customerPhone: v.string(),
     customerEmail: v.optional(v.string()),
-
-    // Time
-    date: v.string(),         // "2024-06-15"
-    timeSlot: v.string(),     // "14:00"
+    date: v.string(),
+    timeSlot: v.string(),
     durationMinutes: v.number(),
-
     notes: v.optional(v.string()),
-
     status: v.union(
-      v.literal("pending"),
-      v.literal("confirmed"),
-      v.literal("cancelled"),
-      v.literal("completed")
+      v.literal("pending"), v.literal("confirmed"),
+      v.literal("cancelled"), v.literal("completed")
     ),
-
     createdAt: v.number(),
   })
     .index("by_business", ["businessId"])
@@ -198,7 +139,7 @@ export default defineSchema({
   reviews: defineTable({
     businessId: v.id("businesses"),
     authorName: v.string(),
-    rating: v.number(),          // 1-5
+    rating: v.number(),
     comment: v.optional(v.string()),
     verified: v.boolean(),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
@@ -230,24 +171,19 @@ export default defineSchema({
     .index("by_status", ["status"])
     .index("by_start", ["startDate"]),
 
-  // ─── PAYMENTS / SUBSCRIPTIONS ──────────────────────────────────
+  // ─── SUBSCRIPTIONS ─────────────────────────────────────────────
   subscriptions: defineTable({
     businessId: v.id("businesses"),
-    ownerId: v.id("users"),
-
-    // MercadoPago
-    mpSubscriptionId: v.string(),      // preapproval_id from MP
+    ownerId: v.string(),              // Clerk user ID
+    mpSubscriptionId: v.string(),
     mpPayerId: v.optional(v.string()),
-    mpStatus: v.string(),              // authorized, paused, cancelled, pending
-
+    mpStatus: v.string(),
     plan: v.literal("pro"),
-    priceReais: v.number(),            // 50.00
+    priceReais: v.number(),
     billingCycle: v.literal("monthly"),
-
     startedAt: v.number(),
     nextBillingAt: v.optional(v.number()),
     cancelledAt: v.optional(v.number()),
-
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -261,7 +197,7 @@ export default defineSchema({
     businessId: v.id("businesses"),
     mpPaymentId: v.string(),
     amount: v.number(),
-    status: v.string(),        // approved, rejected, pending
+    status: v.string(),
     paidAt: v.optional(v.number()),
     createdAt: v.number(),
   })
@@ -270,9 +206,9 @@ export default defineSchema({
 
   // ─── ADMIN LOGS ────────────────────────────────────────────────
   adminLogs: defineTable({
-    adminId: v.id("users"),
-    action: v.string(),       // "approve_business", "delete_business", etc.
-    targetType: v.string(),   // "business", "user", "review"
+    adminId: v.string(),             // Clerk user ID
+    action: v.string(),
+    targetType: v.string(),
     targetId: v.string(),
     details: v.optional(v.string()),
     createdAt: v.number(),
@@ -282,8 +218,11 @@ export default defineSchema({
 
   // ─── USER PROFILES ─────────────────────────────────────────────
   userProfiles: defineTable({
-    userId: v.id("users"),
-    role: v.union(v.literal("user"), v.literal("business_owner"), v.literal("admin"), v.literal("superadmin")),
+    userId: v.string(),              // Clerk user ID
+    role: v.union(
+      v.literal("user"), v.literal("business_owner"),
+      v.literal("admin"), v.literal("superadmin")
+    ),
     displayName: v.optional(v.string()),
     phone: v.optional(v.string()),
     avatarImageId: v.optional(v.string()),
