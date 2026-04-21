@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: force-dynamic in root layout to prevent Convex SSG prerendering crash"}
+MSG=${1:-"fix: replace ConvexAuthNextjsProvider with ConvexProvider, remove useAuthActions hooks"}
 echo "▶ Committing..."
 git add -A && git status --short && git commit -m "$MSG"
 echo "▶ Pushing..."
