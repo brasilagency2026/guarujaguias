@@ -5,18 +5,17 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 
-// Dynamic import to avoid SSR issues with MapLibre
 const GuarujaMap = dynamic(() => import("../../../components/map/GuarujaMap"), { ssr: false });
 
 const CATEGORY_FILTERS = [
-  { slug: "",            label: "Todos",       icon: "🗺️" },
-  { slug: "restaurante", label: "Restaurantes",icon: "🍽️" },
-  { slug: "hospedagem",  label: "Hospedagem",  icon: "🏨" },
-  { slug: "beleza",      label: "Beleza",      icon: "💅" },
-  { slug: "turismo",     label: "Turismo",     icon: "🚤" },
-  { slug: "loja",        label: "Lojas",       icon: "🛍️" },
-  { slug: "saude",       label: "Saúde",       icon: "🏥" },
-  { slug: "cultura",     label: "Cultura",     icon: "🎭" },
+  { slug: "",            label: "Todos",        icon: "🗺️" },
+  { slug: "restaurante", label: "Restaurantes", icon: "🍽️" },
+  { slug: "hospedagem",  label: "Hospedagem",   icon: "🏨" },
+  { slug: "beleza",      label: "Beleza",        icon: "💅" },
+  { slug: "turismo",     label: "Turismo",       icon: "🚤" },
+  { slug: "loja",        label: "Lojas",         icon: "🛍️" },
+  { slug: "saude",       label: "Saúde",         icon: "🏥" },
+  { slug: "cultura",     label: "Cultura",       icon: "🎭" },
 ];
 
 export default function MapPageClient() {
@@ -37,12 +36,10 @@ export default function MapPageClient() {
         width: sidebarOpen ? 340 : 0, minWidth: sidebarOpen ? 340 : 0,
         height: "100%", background: "white", borderRight: "1px solid var(--border)",
         display: "flex", flexDirection: "column", overflow: "hidden",
-        transition: "all 0.3s ease", flexShrink: 0,
-        zIndex: 10,
+        transition: "all 0.3s ease", flexShrink: 0, zIndex: 10,
       }}>
         {sidebarOpen && (
           <>
-            {/* Category filter pills */}
             <div style={{ padding: "12px", borderBottom: "1px solid var(--border)", overflowX: "auto" }}>
               <div style={{ display: "flex", gap: 6, minWidth: "max-content" }}>
                 {CATEGORY_FILTERS.map(({ slug, label, icon }) => (
@@ -59,7 +56,6 @@ export default function MapPageClient() {
               </div>
             </div>
 
-            {/* Business list */}
             <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
               {businesses ? (
                 businesses.length > 0 ? businesses.map((biz) => (
@@ -67,7 +63,8 @@ export default function MapPageClient() {
                     key={biz._id}
                     onClick={() => setSelectedBusiness(biz)}
                     style={{
-                      width: "100%", background: selectedBusiness?._id === biz._id ? "var(--ocean-50)" : "transparent",
+                      width: "100%",
+                      background: selectedBusiness?._id === biz._id ? "var(--ocean-50)" : "transparent",
                       border: selectedBusiness?._id === biz._id ? "1.5px solid var(--ocean-light)" : "1.5px solid transparent",
                       borderRadius: "var(--radius)", padding: "10px 12px", cursor: "pointer",
                       display: "flex", alignItems: "center", gap: 12, marginBottom: 4,
@@ -81,7 +78,7 @@ export default function MapPageClient() {
                     }}>
                       {biz.coverImageId
                         ? <img src={`https://imagedelivery.net/${process.env.NEXT_PUBLIC_CF_IMAGES_HASH}/${biz.coverImageId}/thumbnail`} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "var(--radius-sm)" }} alt="" />
-                        : { restaurante: "🍽️", hospedagem: "🏨", beleza: "💅", turismo: "🚤", loja: "🛍️", saude: "🏥", cultura: "🎭", servicos: "⚙️", eventos: "🎵" }[biz.category]
+                        : ({ restaurante: "🍽️", hospedagem: "🏨", beleza: "💅", turismo: "🚤", loja: "🛍️", saude: "🏥", cultura: "🎭", servicos: "⚙️", eventos: "🎵" } as Record<string, string>)[biz.category]
                       }
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -104,7 +101,6 @@ export default function MapPageClient() {
               )}
             </div>
 
-            {/* Selected business detail panel */}
             {selectedBusiness && (
               <div style={{ borderTop: "1px solid var(--border)", padding: "14px", background: "var(--ocean-50)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
@@ -146,21 +142,19 @@ export default function MapPageClient() {
           background: "white", border: "1px solid var(--border)", borderLeft: "none",
           width: 20, height: 48, cursor: "pointer", zIndex: 20,
           borderRadius: "0 6px 6px 0", display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "left 0.3s ease",
-          fontSize: 10, color: "var(--text-muted)",
+          transition: "left 0.3s ease", fontSize: 10, color: "var(--text-muted)",
         }}
         aria-label={sidebarOpen ? "Fechar painel" : "Abrir painel"}
       >
         {sidebarOpen ? "‹" : "›"}
       </button>
 
-      {/* ── MAP ─────────────────────────────────────────── */}
+      {/* ── MAP — div parent handles 100% width/height ── */}
       <div style={{ flex: 1, height: "100%", position: "relative" }}>
         <GuarujaMap
           selectedCategory={selectedCategory || undefined}
           onBusinessClick={setSelectedBusiness}
-          className=""
-          style={{ width: "100%", height: "100%" }}
+          className="absolute inset-0"
         />
       </div>
     </div>

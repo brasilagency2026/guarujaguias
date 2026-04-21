@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useCallback } from "react";
+import type { CSSProperties } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useQuery } from "convex/react";
@@ -35,9 +36,10 @@ interface MapProps {
   selectedCategory?: string;
   onBusinessClick?: (business: any) => void;
   className?: string;
+  style?: CSSProperties;
 }
 
-export default function GuarujaMap({ selectedCategory, onBusinessClick, className }: MapProps) {
+export default function GuarujaMap({ selectedCategory, onBusinessClick, className, style }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
@@ -47,7 +49,6 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
   const [locating, setLocating] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
 
-  // Load nearby businesses
   const nearby = useQuery(
     api.businesses.getNearby,
     userPos
@@ -55,20 +56,17 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
       : { lat: GUARUJA_CENTER[1], lng: GUARUJA_CENTER[0], radiusKm: 15, category: selectedCategory }
   );
 
-  // Init map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      // OpenFreeMap tiles — free, no API key needed
       style: "https://tiles.openfreemap.org/styles/liberty",
       center: GUARUJA_CENTER,
       zoom: 13,
     });
 
     map.current.addControl(new maplibregl.NavigationControl(), "top-right");
-
     map.current.on("load", () => setMapLoaded(true));
 
     return () => {
@@ -77,11 +75,9 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
     };
   }, []);
 
-  // Update business markers
   useEffect(() => {
     if (!map.current || !mapLoaded || !nearby) return;
 
-    // Clear old markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -89,7 +85,6 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
       const color = CATEGORY_COLORS[business.category] ?? "#666";
       const icon = CATEGORY_ICONS[business.category] ?? "📍";
 
-      // Custom marker element
       const el = document.createElement("div");
       el.className = "map-marker";
       el.innerHTML = `
@@ -113,13 +108,12 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
       `;
 
       el.addEventListener("mouseenter", () => {
-        el.querySelector("div")!.style.transform = "rotate(-45deg) scale(1.2)";
+        (el.querySelector("div") as HTMLElement).style.transform = "rotate(-45deg) scale(1.2)";
       });
       el.addEventListener("mouseleave", () => {
-        el.querySelector("div")!.style.transform = "rotate(-45deg) scale(1)";
+        (el.querySelector("div") as HTMLElement).style.transform = "rotate(-45deg) scale(1)";
       });
 
-      // Popup
       const popup = new maplibregl.Popup({ offset: 25, closeButton: false })
         .setHTML(`
           <div style="font-family: system-ui; min-width: 160px; padding: 2px">
@@ -151,7 +145,6 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
     });
   }, [nearby, mapLoaded, onBusinessClick]);
 
-  // Geolocate user
   const locateUser = useCallback(() => {
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
@@ -162,7 +155,6 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
 
         map.current?.flyTo({ center: coords, zoom: 14, duration: 1500 });
 
-        // User location marker
         if (userMarkerRef.current) userMarkerRef.current.remove();
 
         const el = document.createElement("div");
@@ -188,10 +180,9 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
   }, []);
 
   return (
-    <div className={`relative ${className ?? ""}`}>
+    <div className={`relative ${className ?? ""}`} style={style}>
       <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
 
-      {/* Locate button */}
       <button
         onClick={locateUser}
         disabled={locating}
@@ -217,7 +208,6 @@ export default function GuarujaMap({ selectedCategory, onBusinessClick, classNam
         {locating ? "⟳ Localizando..." : "📍 Minha localização"}
       </button>
 
-      {/* Business count */}
       {nearby && (
         <div style={{
           position: "absolute",
