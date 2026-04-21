@@ -29,8 +29,12 @@ export const handleSubscriptionUpdate = mutation({
         updatedAt: now,
       });
     } else {
-      // New subscription — find the business to get ownerId
-      const business = await ctx.db.get(businessId);
+      // Use typed query instead of db.get() to avoid union type issues
+      const business = await ctx.db
+        .query("businesses")
+        .filter((q) => q.eq(q.field("_id"), businessId))
+        .unique();
+
       if (!business) return;
 
       await ctx.db.insert("subscriptions", {
@@ -50,12 +54,17 @@ export const handleSubscriptionUpdate = mutation({
 
     // Update business plan based on subscription status
     const isActive = args.mpStatus === "authorized";
-    const business = await ctx.db.get(businessId);
+
+    // Use typed query to avoid union type on db.get()
+    const business = await ctx.db
+      .query("businesses")
+      .filter((q) => q.eq(q.field("_id"), businessId))
+      .unique();
+
     if (business) {
       await ctx.db.patch(businessId, {
         plan: isActive ? "pro" : "free",
         hasMiniSite: isActive,
-        // Suspend business if subscription is cancelled/failed
         status: !isActive && business.status === "active" ? "suspended" : business.status,
         updatedAt: now,
       });
@@ -72,7 +81,6 @@ export const recordPayment = mutation({
     paidAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Find subscription
     const sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_mp_subscription", (q) => q.eq("mpSubscriptionId", args.mpSubscriptionId))
@@ -80,14 +88,14 @@ export const recordPayment = mutation({
 
     if (!sub) return;
 
-    // Check for duplicate payment
+    // Idempotency check
     const existing = await ctx.db
       .query("paymentHistory")
       .withIndex("by_subscription", (q) => q.eq("subscriptionId", sub._id))
       .filter((q) => q.eq(q.field("mpPaymentId"), args.mpPaymentId))
       .unique();
 
-    if (existing) return; // idempotent
+    if (existing) return;
 
     await ctx.db.insert("paymentHistory", {
       subscriptionId: sub._id,
@@ -131,17 +139,19 @@ export const cancelSubscription = mutation({
     const userId = await getAuthUserId(ctx);
     if (!userId) throw new Error("Não autenticado");
 
-    const sub = await ctx.db.get(args.subscriptionId);
+    const sub = await ctx.db
+      .query("subscriptions")
+      .filter((q) => q.eq(q.field("_id"), args.subscriptionId))
+      .unique();
+
     if (!sub || sub.ownerId !== userId) throw new Error("Sem permissão");
 
-    // Cancel in MercadoPago via fetch (call from client instead for simplicity)
     await ctx.db.patch(args.subscriptionId, {
       mpStatus: "cancelled",
       cancelledAt: Date.now(),
       updatedAt: Date.now(),
     });
 
-    // Downgrade business
     await ctx.db.patch(sub.businessId, { plan: "free", updatedAt: Date.now() });
   },
 });

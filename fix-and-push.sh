@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: remove unused Google import from convex/auth.ts"}
+MSG=${1:-"fix: use typed query instead of db.get() to resolve ownerId type error in payments.ts"}
 echo "▶ Committing..."
 git add -A && git status --short && git commit -m "$MSG"
 echo "▶ Pushing..."
