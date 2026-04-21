@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: use typed query instead of db.get() to resolve ownerId type error in payments.ts"}
+MSG=${1:-"fix: add BusinessListing type with optional avgRating in DirectoryClient"}
 echo "▶ Committing..."
 git add -A && git status --short && git commit -m "$MSG"
 echo "▶ Pushing..."

@@ -5,6 +5,23 @@ import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import BusinessCard from "../../../components/portal/BusinessCard";
 
+// avgRating is not in the DB schema — it's computed at query time.
+// We extend the base type so TypeScript accepts it throughout this component.
+type BusinessListing = {
+  _id: any;
+  name: string;
+  slug: string;
+  category: string;
+  shortDescription: string;
+  neighborhood: string;
+  hasMiniSite: boolean;
+  coverImageId?: string;
+  viewCount: number;
+  createdAt: number;
+  avgRating?: number;
+  [key: string]: any;
+};
+
 const CATEGORIES = [
   { slug: "",            label: "Todos",        icon: "🗂️" },
   { slug: "restaurante", label: "Restaurantes", icon: "🍽️" },
@@ -53,7 +70,6 @@ export default function DirectoryClient() {
       : "skip"
   );
 
-  // Sync URL params
   useEffect(() => {
     const cat = params.get("cat") ?? "";
     const q = params.get("q") ?? "";
@@ -61,7 +77,12 @@ export default function DirectoryClient() {
     setSearchQuery(q);
   }, [params]);
 
-  const source = searchQuery.trim().length >= 2 ? (searchResults ?? []) : (allBusinesses ?? []);
+  // Cast to BusinessListing[] to allow avgRating access
+  const source = (
+    searchQuery.trim().length >= 2
+      ? (searchResults ?? [])
+      : (allBusinesses ?? [])
+  ) as BusinessListing[];
 
   const filtered = source
     .filter((b) => !neighborhood || b.neighborhood === neighborhood)
@@ -70,7 +91,7 @@ export default function DirectoryClient() {
       if (sortBy === "rating")  return (b.avgRating ?? 0) - (a.avgRating ?? 0);
       if (sortBy === "views")   return b.viewCount - a.viewCount;
       if (sortBy === "alpha")   return a.name.localeCompare(b.name, "pt-BR");
-      return b.createdAt - a.createdAt; // recent
+      return b.createdAt - a.createdAt;
     });
 
   const paginated = filtered.slice(0, (page + 1) * PER_PAGE);
@@ -89,8 +110,6 @@ export default function DirectoryClient() {
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: 30, color: "white", marginBottom: 16 }}>
             Diretório de Negócios
           </h1>
-
-          {/* Search */}
           <div style={{ display: "flex", background: "white", borderRadius: 50, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
             <span style={{ padding: "0 0 0 20px", display: "flex", alignItems: "center", fontSize: 18, color: "var(--text-hint)" }}>🔍</span>
             <input
@@ -109,8 +128,6 @@ export default function DirectoryClient() {
       {/* ── FILTERS ────────────────────────────────── */}
       <div style={{ background: "white", borderBottom: "1px solid var(--border)", position: "sticky", top: "var(--nav-h)", zIndex: 50 }}>
         <div className="container" style={{ maxWidth: 1080 }}>
-
-          {/* Category pills */}
           <div style={{ display: "flex", gap: 6, overflowX: "auto", padding: "10px 0", scrollbarWidth: "none" }}>
             {CATEGORIES.map(({ slug, label, icon }) => (
               <button key={slug} onClick={() => { setCategory(slug); setPage(0); }} style={{
@@ -125,7 +142,6 @@ export default function DirectoryClient() {
             ))}
           </div>
 
-          {/* Secondary filters */}
           <div style={{ display: "flex", gap: 10, padding: "8px 0 10px", alignItems: "center", flexWrap: "wrap" }}>
             <select
               value={neighborhood}
@@ -175,14 +191,12 @@ export default function DirectoryClient() {
       {/* ── RESULTS ─────────────────────────────────── */}
       <div className="container" style={{ maxWidth: 1080, paddingTop: "1.5rem" }}>
 
-        {/* Result count */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.25rem" }}>
           <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
             {allBusinesses === undefined ? "Carregando..." : `${filtered.length} negócio${filtered.length !== 1 ? "s" : ""} encontrado${filtered.length !== 1 ? "s" : ""}`}
             {searchQuery && <span> para "<strong>{searchQuery}</strong>"</span>}
             {category && <span> em <strong>{CATEGORIES.find(c => c.slug === category)?.label}</strong></span>}
           </p>
-
           {(category || searchQuery || neighborhood || onlyMiniSite) && (
             <button onClick={() => { setCategory(""); setSearchQuery(""); setNeighborhood(""); setOnlyMiniSite(false); setPage(0); }}
               style={{ fontSize: 13, color: "var(--coral)", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}>
@@ -213,7 +227,7 @@ export default function DirectoryClient() {
                   <div style={{ width: 60, height: 60, borderRadius: "var(--radius-sm)", background: "var(--bg)", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>
                     {biz.coverImageId
                       ? <img src={`https://imagedelivery.net/${process.env.NEXT_PUBLIC_CF_IMAGES_HASH}/${biz.coverImageId}/thumbnail`} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-                      : { restaurante: "🍽️", hospedagem: "🏨", beleza: "💅", turismo: "🚤", loja: "🛍️", saude: "🏥", cultura: "🎭", servicos: "⚙️", eventos: "🎵" }[biz.category]
+                      : ({ restaurante: "🍽️", hospedagem: "🏨", beleza: "💅", turismo: "🚤", loja: "🛍️", saude: "🏥", cultura: "🎭", servicos: "⚙️", eventos: "🎵" } as Record<string, string>)[biz.category]
                     }
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -222,7 +236,9 @@ export default function DirectoryClient() {
                     <div style={{ fontSize: 12, color: "var(--text-hint)", marginTop: 2 }}>📍 {biz.neighborhood}</div>
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
-                    {biz.avgRating && <div style={{ color: "var(--sand-dark)", fontWeight: 700 }}>★ {biz.avgRating.toFixed(1)}</div>}
+                    {biz.avgRating != null && (
+                      <div style={{ color: "var(--sand-dark)", fontWeight: 700 }}>★ {(biz.avgRating as number).toFixed(1)}</div>
+                    )}
                     {biz.hasMiniSite && <div style={{ fontSize: 11, color: "var(--ocean)", fontWeight: 600, marginTop: 3 }}>🌐 Mini-site</div>}
                   </div>
                   <div style={{ color: "var(--text-hint)", fontSize: 20 }}>›</div>
