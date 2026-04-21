@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchQuery } from "convex/nextjs";
-import { api } from "../../../../convex/_generated/api";
-import MiniSiteRenderer from "../../../components/minisite/MiniSiteRenderer";
+import { api } from "../../../../../convex/_generated/api";
+import MiniSiteRenderer from "../../../../components/minisite/MiniSiteRenderer";
 
 interface Props {
   params: { slug: string };
@@ -39,7 +39,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     alternates: { canonical: `https://guarujaguias.com.br/guia/${business.slug}` },
 
-    // Local business schema.org
     other: {
       "application/ld+json": JSON.stringify({
         "@context": "https://schema.org",
@@ -65,7 +64,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// ISR — regenerate every 60 seconds
 export const revalidate = 60;
 
 export default async function BusinessSlugPage({ params }: Props) {
