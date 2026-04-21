@@ -1,7 +1,13 @@
 import { v } from "convex/values";
-import { query, mutation, internalMutation } from "./_generated/server";
-import { getAuthUserId } from "@convex-dev/auth/server";
+import { query, mutation } from "./_generated/server";
 import { generateSlug } from "./lib/slug";
+
+// ─── Helper: get Clerk user ID from JWT ───────────────────────────────────
+async function requireAuth(ctx: any): Promise<string> {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Não autenticado");
+  return identity.subject; // Clerk user ID e.g. "user_2abc123"
+}
 
 // ─── PUBLIC QUERIES ────────────────────────────────────────────────────────
 
@@ -9,17 +15,15 @@ export const listActive = query({
   args: {
     category: v.optional(v.string()),
     limit: v.optional(v.number()),
-    cursor: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    let q = ctx.db
+    const businesses = await ctx.db
       .query("businesses")
-      .withIndex("by_status", (q) => q.eq("status", "active"));
-
-    const businesses = await q.collect();
+      .withIndex("by_status", (q: any) => q.eq("status", "active"))
+      .collect();
 
     const filtered = args.category
-      ? businesses.filter((b) => b.category === args.category)
+      ? businesses.filter((b: any) => b.category === args.category)
       : businesses;
 
     return filtered.slice(0, args.limit ?? 50);
@@ -31,27 +35,25 @@ export const getBySlug = query({
   handler: async (ctx, args) => {
     const business = await ctx.db
       .query("businesses")
-      .withIndex("by_slug", (q) => q.eq("slug", args.slug))
+      .withIndex("by_slug", (q: any) => q.eq("slug", args.slug))
       .unique();
 
     if (!business || business.status === "deleted") return null;
 
-    // Load minisite config if exists
     let miniSiteConfig = null;
     if (business.miniSiteConfig) {
       miniSiteConfig = await ctx.db.get(business.miniSiteConfig);
     }
 
-    // Load reviews
     const reviews = await ctx.db
       .query("reviews")
-      .withIndex("by_business", (q) => q.eq("businessId", business._id))
-      .filter((q) => q.eq(q.field("status"), "approved"))
+      .withIndex("by_business", (q: any) => q.eq("businessId", business._id))
+      .filter((q: any) => q.eq(q.field("status"), "approved"))
       .collect();
 
     const avgRating =
       reviews.length > 0
-        ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length
+        ? reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length
         : null;
 
     return { ...business, miniSiteConfig, reviews, avgRating };
@@ -62,16 +64,15 @@ export const search = query({
   args: { query: v.string(), category: v.optional(v.string()) },
   handler: async (ctx, args) => {
     if (!args.query.trim()) return [];
-    const results = await ctx.db
+    return ctx.db
       .query("businesses")
-      .withSearchIndex("search_businesses", (q) => {
+      .withSearchIndex("search_businesses", (q: any) => {
         let s = q.search("name", args.query);
-        if (args.category) s = s.eq("category", args.category as any);
+        if (args.category) s = s.eq("category", args.category);
         return s;
       })
-      .filter((q) => q.eq(q.field("status"), "active"))
+      .filter((q: any) => q.eq(q.field("status"), "active"))
       .take(20);
-    return results;
   },
 });
 
@@ -84,17 +85,16 @@ export const getNearby = query({
   },
   handler: async (ctx, args) => {
     const radius = args.radiusKm ?? 5;
-    // Simple bounding box filter (Convex doesn't have geo queries natively)
     const latDelta = radius / 111;
     const lngDelta = radius / (111 * Math.cos((args.lat * Math.PI) / 180));
 
     const businesses = await ctx.db
       .query("businesses")
-      .withIndex("by_status", (q) => q.eq("status", "active"))
+      .withIndex("by_status", (q: any) => q.eq("status", "active"))
       .collect();
 
     return businesses
-      .filter((b) => {
+      .filter((b: any) => {
         if (args.category && b.category !== args.category) return false;
         return (
           b.lat >= args.lat - latDelta &&
@@ -103,11 +103,11 @@ export const getNearby = query({
           b.lng <= args.lng + lngDelta
         );
       })
-      .map((b) => ({
+      .map((b: any) => ({
         ...b,
         distanceKm: haversine(args.lat, args.lng, b.lat, b.lng),
       }))
-      .sort((a, b) => a.distanceKm - b.distanceKm);
+      .sort((a: any, b: any) => a.distanceKm - b.distanceKm);
   },
 });
 
@@ -148,14 +148,12 @@ export const register = mutation({
     wantsMiniSite: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Usuário não autenticado");
+    const clerkId = await requireAuth(ctx);
 
-    // Generate unique slug
     let slug = generateSlug(args.name);
     const existing = await ctx.db
       .query("businesses")
-      .withIndex("by_slug", (q) => q.eq("slug", slug))
+      .withIndex("by_slug", (q: any) => q.eq("slug", slug))
       .unique();
     if (existing) slug = `${slug}-${Date.now().toString(36)}`;
 
@@ -164,7 +162,7 @@ export const register = mutation({
     const businessId = await ctx.db.insert("businesses", {
       name: args.name,
       slug,
-      ownerId: userId,
+      ownerId: clerkId as any,
       category: args.category,
       description: args.description,
       shortDescription: args.shortDescription,
@@ -190,22 +188,6 @@ export const register = mutation({
       createdAt: now,
       updatedAt: now,
     });
-
-    // Update user role
-    const profile = await ctx.db
-      .query("userProfiles")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .unique();
-
-    if (!profile) {
-      await ctx.db.insert("userProfiles", {
-        userId,
-        role: "business_owner",
-        createdAt: now,
-      });
-    } else if (profile.role === "user") {
-      await ctx.db.patch(profile._id, { role: "business_owner" });
-    }
 
     return { businessId, slug };
   },
@@ -234,8 +216,6 @@ export const trackClick = mutation({
   },
 });
 
-// ─── OWNER MUTATIONS ───────────────────────────────────────────────────────
-
 export const updateBusiness = mutation({
   args: {
     businessId: v.id("businesses"),
@@ -252,13 +232,9 @@ export const updateBusiness = mutation({
     galleryImageIds: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const userId = await getAuthUserId(ctx);
-    if (!userId) throw new Error("Não autenticado");
-
+    const clerkId = await requireAuth(ctx);
     const business = await ctx.db.get(args.businessId);
-    if (!business || business.ownerId !== userId)
-      throw new Error("Sem permissão");
-
+    if (!business || business.ownerId !== clerkId) throw new Error("Sem permissão");
     const { businessId, ...updates } = args;
     await ctx.db.patch(businessId, { ...updates, updatedAt: Date.now() });
   },

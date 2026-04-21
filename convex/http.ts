@@ -1,12 +1,8 @@
 import { httpRouter } from "convex/server";
-import { auth } from "./auth";
 import { httpAction } from "./_generated/server";
 import { api } from "./_generated/api";
 
 const http = httpRouter();
-
-// Auth routes (Convex Auth)
-auth.addHttpRoutes(http);
 
 // MercadoPago webhook — receives payment/subscription events
 http.route({
@@ -15,11 +11,9 @@ http.route({
   handler: httpAction(async (ctx, req) => {
     const body = await req.json();
     const { type, data } = body;
-
     const MP_ACCESS_TOKEN = process.env.MERCADOPAGO_ACCESS_TOKEN!;
 
     if (type === "subscription_preapproval" && data?.id) {
-      // Fetch latest subscription state from MP
       const mpRes = await fetch(`https://api.mercadopago.com/preapproval/${data.id}`, {
         headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` },
       });

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const NAV_LINKS = [
   { href: "/mapa",      label: "Mapa",      icon: "🗺️" },
@@ -23,6 +24,7 @@ export default function PortalNav() {
       display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "0 1.5rem",
     }}>
+
       {/* Logo */}
       <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 22 }}>🌊</span>
@@ -47,28 +49,50 @@ export default function PortalNav() {
       </div>
 
       {/* Right CTAs */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <Link href="/dashboard" style={{
-          color: "rgba(255,255,255,0.8)", textDecoration: "none",
-          fontSize: 13, padding: "6px 12px",
-        }} className="hide-mobile">
-          Meu painel
-        </Link>
-        <Link href="/cadastro" style={{
-          background: "var(--sand-dark)", color: "white", textDecoration: "none",
-          padding: "8px 18px", borderRadius: "var(--radius-sm)",
-          fontSize: 13, fontWeight: 700, transition: "background 0.15s",
-        }}>
-          + Cadastrar negócio
-        </Link>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
 
+        {/* Show dashboard link + UserButton when logged in */}
+        <SignedIn>
+          <Link href="/dashboard" style={{
+            color: "rgba(255,255,255,0.8)", textDecoration: "none",
+            fontSize: 13, padding: "6px 12px",
+          }} className="hide-mobile">
+            Meu painel
+          </Link>
+          <UserButton
+            afterSignOutUrl="/"
+            appearance={{
+              elements: {
+                avatarBox: { width: 32, height: 32 },
+              },
+            }}
+          />
+        </SignedIn>
+
+        {/* Show login + register when logged out */}
+        <SignedOut>
+          <Link href="/login" style={{
+            color: "rgba(255,255,255,0.8)", textDecoration: "none",
+            fontSize: 13, padding: "6px 12px",
+          }} className="hide-mobile">
+            Entrar
+          </Link>
+          <Link href="/cadastro" style={{
+            background: "var(--sand-dark)", color: "white", textDecoration: "none",
+            padding: "8px 18px", borderRadius: "var(--radius-sm)",
+            fontSize: 13, fontWeight: 700,
+          }}>
+            + Cadastrar negócio
+          </Link>
+        </SignedOut>
+
+        {/* Mobile hamburger */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           style={{
             background: "transparent", border: "none", color: "white",
-            cursor: "pointer", fontSize: 20, padding: "4px", display: "none",
+            cursor: "pointer", fontSize: 20, padding: "4px",
           }}
-          className="show-mobile"
           aria-label="Menu"
         >
           {menuOpen ? "✕" : "☰"}
@@ -91,13 +115,15 @@ export default function PortalNav() {
               {icon} {label}
             </Link>
           ))}
-          <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{
-            color: "white", textDecoration: "none", padding: "14px 16px",
-            borderRadius: "var(--radius)", fontSize: 18,
-            background: "rgba(255,255,255,0.1)",
-          }}>
-            📊 Meu painel
-          </Link>
+          <SignedIn>
+            <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{
+              color: "white", textDecoration: "none", padding: "14px 16px",
+              borderRadius: "var(--radius)", fontSize: 18,
+              background: "rgba(255,255,255,0.1)",
+            }}>
+              📊 Meu painel
+            </Link>
+          </SignedIn>
           <Link href="/cadastro" onClick={() => setMenuOpen(false)} style={{
             color: "white", textDecoration: "none", padding: "14px 16px",
             borderRadius: "var(--radius)", fontSize: 18,
@@ -105,6 +131,15 @@ export default function PortalNav() {
           }}>
             ＋ Cadastrar negócio
           </Link>
+          <SignedOut>
+            <Link href="/login" onClick={() => setMenuOpen(false)} style={{
+              color: "white", textDecoration: "none", padding: "14px 16px",
+              borderRadius: "var(--radius)", fontSize: 18,
+              background: "rgba(255,255,255,0.1)",
+            }}>
+              🔑 Entrar
+            </Link>
+          </SignedOut>
         </div>
       )}
     </nav>

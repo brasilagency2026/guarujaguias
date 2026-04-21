@@ -1,25 +1,23 @@
-"use client";
-import { useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
 
 const NAV = [
-  { href: "/dashboard",             icon: "📊", label: "Visão geral" },
-  { href: "/dashboard/perfil",      icon: "✏️", label: "Editar perfil" },
-  { href: "/dashboard/mini-site",   icon: "🌐", label: "Meu mini-site" },
-  { href: "/dashboard/fotos",       icon: "📸", label: "Fotos" },
-  { href: "/dashboard/agendamentos",icon: "📅", label: "Agendamentos" },
-  { href: "/dashboard/assinatura",  icon: "💳", label: "Assinatura" },
+  { href: "/dashboard",              icon: "📊", label: "Visão geral" },
+  { href: "/dashboard/perfil",       icon: "✏️", label: "Editar perfil" },
+  { href: "/dashboard/mini-site",    icon: "🌐", label: "Meu mini-site" },
+  { href: "/dashboard/fotos",        icon: "📸", label: "Fotos" },
+  { href: "/dashboard/agendamentos", icon: "📅", label: "Agendamentos" },
+  { href: "/dashboard/assinatura",   icon: "💳", label: "Assinatura" },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  // const businesses = useQuery(api.businesses.getMyBusinesses);
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { userId } = auth();
+  if (!userId) redirect("/login?redirect=/dashboard");
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)" }}>
-
       {/* Sidebar */}
       <aside style={{
         width: 220, background: "white", borderRight: "1px solid var(--border)",
@@ -40,10 +38,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link key={href} href={href} style={{ textDecoration: "none", display: "block", marginBottom: 2 }}>
               <div style={{
                 padding: "10px 12px", borderRadius: "var(--radius-sm)", fontSize: 14,
-                fontWeight: pathname === href ? 600 : 400,
-                background: pathname === href ? "var(--ocean-50)" : "transparent",
-                color: pathname === href ? "var(--ocean)" : "var(--text-muted)",
                 display: "flex", alignItems: "center", gap: 10,
+                color: "var(--text-muted)",
                 transition: "all 0.15s",
               }}>
                 <span>{icon}</span>
@@ -53,16 +49,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ))}
         </nav>
 
-        <div style={{ padding: "1rem", borderTop: "1px solid var(--border)", marginTop: "auto" }}>
-          <Link href="/" style={{ textDecoration: "none" }}>
-            <div style={{ fontSize: 13, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 8 }}>
-              ← Voltar ao portal
-            </div>
-          </Link>
+        {/* User profile at bottom */}
+        <div style={{ padding: "1rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
+          <UserButton afterSignOutUrl="/" />
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Minha conta</div>
         </div>
       </aside>
 
-      {/* Main content */}
       <main style={{ flex: 1, padding: "2rem", overflowY: "auto" }}>
         {children}
       </main>
