@@ -2,6 +2,17 @@
 const path = require("path");
 
 const nextConfig = {
+  // Convex uses browser APIs (localStorage, etc.) that crash SSG prerendering.
+  // Force all pages to render dynamically on the server (SSR), not statically.
+  // This is the correct approach for real-time Convex apps.
+  experimental: {
+    // Allow dynamic code evaluation used by Convex internals
+    unstable_allowDynamic: [
+      "**/node_modules/convex/**",
+      "**/node_modules/@convex-dev/**",
+    ],
+  },
+
   images: {
     remotePatterns: [
       {
@@ -14,6 +25,7 @@ const nextConfig = {
 
   trailingSlash: false,
 
+  // Resolve @convex alias so all imports work regardless of folder depth
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

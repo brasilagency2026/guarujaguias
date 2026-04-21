@@ -3,6 +3,9 @@ import { ConvexClientProvider } from "./ConvexClientProvider";
 import { Toaster } from "sonner";
 import "./globals.css";
 
+// Force dynamic rendering — Convex auth hooks cannot run during SSG prerendering
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://guarujaguias.com.br"),
   title: { default: "Guarujá Guias – Comércio e Serviços no Litoral", template: "%s | Guarujá Guias" },
