@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
-import OpeningHoursEditor from "../../components/forms/OpeningHoursEditor";
-import ImageUploader from "../../components/ui/ImageUploader";
+import OpeningHoursEditor from "../../../components/forms/OpeningHoursEditor";
+import ImageUploader from "../../../components/ui/ImageUploader";
 
 const TAGS_SUGGESTIONS: Record<string, string[]> = {
   restaurante: ["frutos do mar", "churrasco", "pizza", "japonês", "delivery", "almoço executivo", "rodízio"],
@@ -15,7 +15,6 @@ const TAGS_SUGGESTIONS: Record<string, string[]> = {
 };
 
 export default function PerfilPage() {
-  // Mock — replace with useQuery(api.businesses.getMyBusiness)
   const [form, setForm] = useState({
     name: "Cantinho do Pescador",
     description: "Frutos do mar frescos servidos com vista para o oceano. Especialidade em moqueca e camarão.",
@@ -54,7 +53,6 @@ export default function PerfilPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // await updateBusiness({ businessId: ..., ...form });
       await new Promise((r) => setTimeout(r, 600));
       toast.success("Perfil atualizado com sucesso!");
     } catch (e: any) {
@@ -111,7 +109,6 @@ export default function PerfilPage() {
             onChange={(e) => set("description", e.target.value)} />
         </div>
 
-        {/* Tags */}
         <div className="form-row">
           <label className="form-label">Tags / Palavras-chave <span style={{ color: "var(--text-hint)", fontWeight: 400 }}>(máx. 10)</span></label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
@@ -221,12 +218,10 @@ export default function PerfilPage() {
         />
       </div>
 
-      {/* Fixed save bar */}
       <div style={{
         position: "fixed", bottom: 0, left: 220, right: 0,
         background: "white", borderTop: "1px solid var(--border)",
-        padding: "1rem 2rem", display: "flex", justifyContent: "flex-end", gap: 12,
-        zIndex: 100,
+        padding: "1rem 2rem", display: "flex", justifyContent: "flex-end", gap: 12, zIndex: 100,
       }}>
         <button onClick={handleSave} disabled={saving} className="btn btn-primary btn-lg"
           style={{ opacity: saving ? 0.7 : 1, minWidth: 200 }}>

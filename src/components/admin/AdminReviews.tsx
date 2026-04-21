@@ -1,6 +1,6 @@
 "use client";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
 
 export default function AdminReviews() {
@@ -24,7 +24,7 @@ export default function AdminReviews() {
 
   return (
     <div>
-      <h1 style={{ fontFamily: "'Fraunces', serif", fontSize: 24, fontWeight: 700, marginBottom: 20 }}>
+      <h1 style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700, marginBottom: 20 }}>
         ⭐ Moderação de Avaliações
       </h1>
 
@@ -46,7 +46,6 @@ export default function AdminReviews() {
               background: "white", borderRadius: 16, padding: "1.25rem",
               border: "1px solid #eee", display: "flex", gap: 14, flexWrap: "wrap",
             }}>
-              {/* Stars */}
               <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 18, color: "#d4a853" }}>
                   {"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}
@@ -56,7 +55,6 @@ export default function AdminReviews() {
                 </div>
               </div>
 
-              {/* Content */}
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 3 }}>{review.authorName}</div>
                 {review.comment ? (
@@ -69,18 +67,13 @@ export default function AdminReviews() {
                 </div>
               </div>
 
-              {/* Actions */}
               <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
-                <button
-                  onClick={() => handleApprove(review._id, review.authorName)}
-                  style={{ padding: "8px 16px", borderRadius: 8, background: "#e3f5ea", color: "#2d7a4a", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700 }}
-                >
+                <button onClick={() => handleApprove(review._id, review.authorName)}
+                  style={{ padding: "8px 16px", borderRadius: 8, background: "#e3f5ea", color: "#2d7a4a", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
                   ✓ Aprovar
                 </button>
-                <button
-                  onClick={() => handleReject(review._id, review.authorName)}
-                  style={{ padding: "8px 16px", borderRadius: 8, background: "#fae8e2", color: "#e05a3a", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700 }}
-                >
+                <button onClick={() => handleReject(review._id, review.authorName)}
+                  style={{ padding: "8px 16px", borderRadius: 8, background: "#fae8e2", color: "#e05a3a", border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700 }}>
                   ✕ Rejeitar
                 </button>
               </div>

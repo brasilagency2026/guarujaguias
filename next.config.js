@@ -1,19 +1,27 @@
 /** @type {import('next').NextConfig} */
+const path = require("path");
+
 const nextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "imagedelivery.net",   // Cloudflare Images CDN
+        hostname: "imagedelivery.net",
         pathname: "/**",
       },
     ],
   },
 
-  // SEO: trailing slash for consistent canonical URLs
   trailingSlash: false,
 
-  // Headers for security
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "@convex": path.resolve(__dirname, "convex"),
+    };
+    return config;
+  },
+
   async headers() {
     return [
       {
@@ -27,10 +35,8 @@ const nextConfig = {
     ];
   },
 
-  // Redirects for old URLs
   async redirects() {
     return [
-      // e.g. /business/slug → /guia/slug
       {
         source: "/business/:slug",
         destination: "/guia/:slug",
