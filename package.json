@@ -16,6 +16,7 @@
     "react-dom": "^18.3.0",
     "convex": "^1.12.0",
     "@clerk/nextjs": "^5.7.2",
+    "@clerk/localizations": "^3.0.0",
     "maplibre-gl": "^4.4.1",
     "react-map-gl": "^7.1.7",
     "mercadopago": "^2.0.6",

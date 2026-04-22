@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
-MSG=${1:-"feat: set Clerk UI language to pt-BR (Portuguese Brazil)"}
+MSG=${1:-"fix: add @clerk/localizations package for pt-BR support"}
+echo "▶ Installing @clerk/localizations..."
+npm install @clerk/localizations@^3.0.0
+echo "✅ Installed"
 echo "▶ Committing..."
 git add -A && git status --short && git commit -m "$MSG"
 echo "▶ Pushing..."
