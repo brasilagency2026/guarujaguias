@@ -4,18 +4,19 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import BusinessCard from "../../components/portal/BusinessCard";
+import EventsStrip from "../../components/portal/EventsStrip";
 import Link from "next/link";
 
+// Eventos removed — shown separately in EventsStrip
 const CATEGORIES = [
   { slug: "restaurante", label: "Restaurantes", icon: "🍽️", count: "68" },
   { slug: "hospedagem",  label: "Hospedagem",   icon: "🏨", count: "42" },
-  { slug: "beleza",      label: "Beleza",        icon: "💅", count: "35" },
-  { slug: "turismo",     label: "Turismo",       icon: "🚤", count: "28" },
-  { slug: "loja",        label: "Lojas",         icon: "🛍️", count: "55" },
-  { slug: "saude",       label: "Saúde",         icon: "🏥", count: "22" },
-  { slug: "cultura",     label: "Cultura",       icon: "🎭", count: "18" },
-  { slug: "eventos",     label: "Eventos",       icon: "🎵", count: "31" },
-  { slug: "servicos",    label: "Serviços",      icon: "⚙️", count: "47" },
+  { slug: "beleza",      label: "Beleza",       icon: "💅", count: "35" },
+  { slug: "turismo",     label: "Turismo",      icon: "🚤", count: "28" },
+  { slug: "loja",        label: "Lojas",        icon: "🛍️", count: "55" },
+  { slug: "saude",       label: "Saúde",        icon: "🏥", count: "22" },
+  { slug: "cultura",     label: "Cultura",      icon: "🎭", count: "18" },
+  { slug: "servicos",    label: "Serviços",     icon: "⚙️", count: "47" },
 ];
 
 export default function HomeClient() {
@@ -68,7 +69,6 @@ export default function HomeClient() {
             Restaurantes, hotéis, salões e muito mais — tudo em um só lugar
           </p>
 
-          {/* Search */}
           <form onSubmit={handleSearch} style={{
             display: "flex", maxWidth: 520, margin: "0 auto 20px",
             background: "white", borderRadius: 50, overflow: "hidden",
@@ -80,7 +80,7 @@ export default function HomeClient() {
               placeholder="Restaurante, pousada, salão..."
               style={{
                 flex: 1, border: "none", outline: "none",
-                padding: "14px 16px", fontSize: 15,
+                padding: "14px 16px", fontSize: 16,
                 fontFamily: "var(--font-body)", background: "transparent",
                 minWidth: 0,
               }}
@@ -94,15 +94,10 @@ export default function HomeClient() {
             </button>
           </form>
 
-          {/* Quick tags — horizontal scroll on mobile */}
-          <div style={{
-            display: "flex", gap: 8, justifyContent: "center",
-            flexWrap: "wrap",
-          }}>
+          <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
             {["🍽️ Restaurantes", "🏖️ Pousadas", "🚤 Passeios", "💅 Beleza"].map((tag) => (
               <button key={tag} onClick={() => {
-                const parts = tag.split(" ");
-                const word = parts[1].toLowerCase();
+                const word = tag.split(" ")[1].toLowerCase();
                 const cat = word === "pousadas" ? "hospedagem" : word === "passeios" ? "turismo" : word;
                 router.push(`/diretorio?cat=${cat}`);
               }} style={{
@@ -118,41 +113,21 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* ── STATS ── */}
-      <section style={{ background: "white", borderBottom: "1px solid var(--border)" }}>
-        <div style={{
-          maxWidth: 1080, margin: "0 auto", padding: "1.25rem 1rem",
-          display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
-          gap: "1rem",
-        }}>
-          {[
-            { n: "347+", label: "Negócios" },
-            { n: "89",   label: "Com mini-site" },
-            { n: "12",   label: "Categorias" },
-            { n: "4.7★", label: "Avaliação média" },
-          ].map(({ n, label }) => (
-            <div key={label} style={{ textAlign: "center" }}>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: "clamp(20px, 5vw, 28px)", color: "var(--ocean)", fontWeight: 600 }}>{n}</div>
-              <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ── EVENTS STRIP (replaces stats bar) ── */}
+      <EventsStrip />
 
       {/* ── MAP CTA ── */}
-      <section style={{ padding: "1rem", background: "var(--ocean-50)" }}>
+      <section style={{ padding: "0.875rem 1rem", background: "var(--ocean-50)", borderBottom: "1px solid var(--border)" }}>
         <div style={{
           maxWidth: 1080, margin: "0 auto",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 12, flexWrap: "wrap",
+          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
         }}>
           <div>
-            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, marginBottom: 2 }}>
+            <h2 style={{ fontFamily: "var(--font-display)", fontSize: 17, marginBottom: 1 }}>
               📍 Mapa interativo
             </h2>
-            <p style={{ color: "var(--text-muted)", fontSize: 13 }}>
-              Negócios próximos a você em tempo real
+            <p style={{ color: "var(--text-muted)", fontSize: 12 }}>
+              Negócios próximos a você
             </p>
           </div>
           <Link href="/mapa" className="btn btn-primary btn-sm" style={{ flexShrink: 0 }}>
@@ -161,45 +136,44 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* ── CATEGORIES ── */}
-      <section style={{ padding: "2rem 1rem" }}>
-        <h2 className="section-title" style={{ marginBottom: 4 }}>Categorias</h2>
-        <p className="section-sub">Encontre o que você procura</p>
+      {/* ── CATEGORIES (sem Eventos) ── */}
+      <section style={{ padding: "1.5rem 1rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "1rem" }}>
+          <h2 className="section-title" style={{ marginBottom: 0 }}>Categorias</h2>
+        </div>
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 10,
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap: 8,
         }}>
-          {/* 3 cols on mobile, more on desktop */}
           <style>{`
-            @media (min-width: 480px) { .cat-grid { grid-template-columns: repeat(4, 1fr) !important; } }
-            @media (min-width: 768px) { .cat-grid { grid-template-columns: repeat(5, 1fr) !important; } }
-            @media (min-width: 1024px) { .cat-grid { grid-template-columns: repeat(9, 1fr) !important; } }
+            @media (min-width: 640px) { .cat-grid-home { grid-template-columns: repeat(4, 1fr) !important; } }
+            @media (min-width: 1024px) { .cat-grid-home { grid-template-columns: repeat(8, 1fr) !important; } }
           `}</style>
           {CATEGORIES.map(({ slug, label, icon, count }) => (
             <Link key={slug} href={`/diretorio?cat=${slug}`} style={{ textDecoration: "none" }}>
               <div style={{
                 background: "white", borderRadius: "var(--radius)",
-                padding: "14px 8px", textAlign: "center",
-                border: "1.5px solid transparent",
-                transition: "all 0.2s", cursor: "pointer",
+                padding: "12px 6px", textAlign: "center",
+                border: "1px solid var(--border)",
                 boxShadow: "var(--shadow-sm)",
+                transition: "all 0.2s",
               }}>
-                <div style={{ fontSize: "clamp(22px, 5vw, 30px)", marginBottom: 6 }}>{icon}</div>
-                <div style={{ fontSize: "clamp(10px, 2.5vw, 12px)", fontWeight: 600, color: "var(--text)", marginBottom: 1, lineHeight: 1.2 }}>{label}</div>
-                <div style={{ fontSize: 10, color: "var(--text-hint)" }}>{count}</div>
+                <div style={{ fontSize: "clamp(22px, 5vw, 28px)", marginBottom: 5 }}>{icon}</div>
+                <div style={{ fontSize: "clamp(9px, 2vw, 11px)", fontWeight: 600, color: "var(--text)", lineHeight: 1.2 }}>{label}</div>
+                <div style={{ fontSize: 9, color: "var(--text-hint)", marginTop: 1 }}>{count}</div>
               </div>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* ── FEATURED ── */}
+      {/* ── FEATURED BUSINESSES ── */}
       <section style={{ padding: "0 1rem 2rem", background: "white" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16, paddingTop: "2rem" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14, paddingTop: "1.5rem" }}>
           <div>
             <h2 className="section-title" style={{ marginBottom: 2 }}>Destaques</h2>
-            <p style={{ color: "var(--text-muted)", fontSize: 13 }}>Bem avaliados pela comunidade</p>
+            <p style={{ color: "var(--text-muted)", fontSize: 12 }}>Bem avaliados pela comunidade</p>
           </div>
           <Link href="/diretorio" style={{ color: "var(--ocean-mid)", textDecoration: "none", fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
             Ver todos →
@@ -207,17 +181,11 @@ export default function HomeClient() {
         </div>
 
         {featured ? (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))",
-            gap: 16,
-          }}>
-            {featured.map((biz) => (
-              <BusinessCard key={biz._id} business={biz} />
-            ))}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 14 }}>
+            {featured.map((biz) => <BusinessCard key={biz._id} business={biz} />)}
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 16 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(280px, 100%), 1fr))", gap: 14 }}>
             {[1,2,3].map((i) => (
               <div key={i} style={{ height: 240, background: "var(--bg)", borderRadius: "var(--radius-lg)", animation: "pulse 1.5s ease infinite" }} />
             ))}
@@ -228,50 +196,53 @@ export default function HomeClient() {
       {/* ── PLANS ── */}
       <section id="planos" style={{ padding: "2rem 1rem", background: "var(--bg)" }}>
         <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
             <h2 className="section-title">Para comerciantes</h2>
-            <p style={{ color: "var(--text-muted)", fontSize: 15 }}>Coloque seu negócio no mapa — literalmente</p>
+            <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Coloque seu negócio no mapa — literalmente</p>
           </div>
 
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "1fr",
-            gap: 16,
-          }}>
-            <style>{`
-              @media (min-width: 600px) { .plans-grid { grid-template-columns: 1fr 1fr !important; } }
-            `}</style>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14 }}>
+            <style>{`@media (min-width: 600px) { .plans-grid { grid-template-columns: 1fr 1fr 1fr !important; } }`}</style>
 
-            {/* Free */}
-            <div className="card" style={{ padding: "1.5rem" }}>
-              <span className="badge badge-free" style={{ marginBottom: 12, display: "inline-block" }}>GRATUITO</span>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, marginBottom: 2 }}>R$ 0</div>
-              <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>Para sempre</div>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-                {["✅ Listagem no portal", "✅ Aparece no mapa", "✅ Botão WhatsApp", "❌ Mini-site", "❌ Agendamento"].map(i => (
-                  <li key={i} style={{ fontSize: 14, color: i.startsWith("❌") ? "var(--text-hint)" : "var(--text)" }}>{i}</li>
+            {/* Free plan */}
+            <div className="card" style={{ padding: "1.25rem" }}>
+              <span className="badge badge-free" style={{ marginBottom: 10, display: "inline-block" }}>GRATUITO</span>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, marginBottom: 2 }}>R$ 0</div>
+              <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 14 }}>Para sempre</div>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                {["✅ Listagem no portal", "✅ Aparece no mapa", "✅ Botão WhatsApp", "❌ Mini-site"].map(i => (
+                  <li key={i} style={{ fontSize: 13, color: i.startsWith("❌") ? "var(--text-hint)" : "var(--text)" }}>{i}</li>
                 ))}
               </ul>
               <Link href="/cadastro" className="btn btn-secondary btn-full">Cadastrar grátis</Link>
             </div>
 
-            {/* Pro */}
-            <div className="card" style={{ padding: "1.5rem", border: "2px solid var(--ocean)", position: "relative", overflow: "hidden" }}>
-              <div style={{
-                position: "absolute", top: 14, right: -20,
-                background: "var(--sand-dark)", color: "white",
-                fontSize: 10, fontWeight: 700, padding: "3px 28px", transform: "rotate(35deg)",
-              }}>POPULAR</div>
-              <span className="badge badge-pro" style={{ marginBottom: 12, display: "inline-block" }}>PRO</span>
-              <div style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, marginBottom: 2 }}>R$ 50</div>
-              <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 16 }}>por mês · cancele quando quiser</div>
-              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-                {["✅ Tudo do gratuito", "✅ Mini-site personalizado", "✅ Agendamento online", "✅ Galeria de fotos", "✅ Lista de serviços"].map(i => (
-                  <li key={i} style={{ fontSize: 14 }}>{i}</li>
+            {/* Pro plan */}
+            <div className="card" style={{ padding: "1.25rem", border: "2px solid var(--ocean)", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 12, right: -20, background: "var(--sand-dark)", color: "white", fontSize: 10, fontWeight: 700, padding: "3px 28px", transform: "rotate(35deg)" }}>POPULAR</div>
+              <span className="badge badge-pro" style={{ marginBottom: 10, display: "inline-block" }}>PRO</span>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, marginBottom: 2 }}>R$ 50</div>
+              <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 14 }}>por mês</div>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                {["✅ Tudo do gratuito", "✅ Mini-site", "✅ Agendamento", "✅ Galeria de fotos"].map(i => (
+                  <li key={i} style={{ fontSize: 13 }}>{i}</li>
                 ))}
               </ul>
-              <Link href="/cadastro?plano=pro" className="btn btn-primary btn-full">
-                Começar por R$ 50/mês
+              <Link href="/cadastro?plano=pro" className="btn btn-primary btn-full">R$ 50/mês</Link>
+            </div>
+
+            {/* Event plan */}
+            <div className="card" style={{ padding: "1.25rem", border: "2px solid var(--coral)", position: "relative" }}>
+              <span className="badge" style={{ marginBottom: 10, display: "inline-block", background: "var(--coral-light)", color: "var(--coral)" }}>EVENTO</span>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, marginBottom: 2 }}>R$ 100</div>
+              <div style={{ color: "var(--text-muted)", fontSize: 13, marginBottom: 14 }}>por 30 dias</div>
+              <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 7, marginBottom: 16 }}>
+                {["✅ Destaque na homepage", "✅ Agenda de eventos", "✅ Link WhatsApp", "✅ Foto do evento"].map(i => (
+                  <li key={i} style={{ fontSize: 13 }}>{i}</li>
+                ))}
+              </ul>
+              <Link href="/dashboard/eventos/novo" className="btn btn-full" style={{ background: "var(--coral)", color: "white", border: "none" }}>
+                Divulgar evento
               </Link>
             </div>
           </div>

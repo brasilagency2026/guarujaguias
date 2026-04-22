@@ -8,8 +8,18 @@ const NAV = [
   { href: "/dashboard/perfil",       icon: "✏️", label: "Perfil" },
   { href: "/dashboard/mini-site",    icon: "🌐", label: "Mini-site" },
   { href: "/dashboard/fotos",        icon: "📸", label: "Fotos" },
+  { href: "/dashboard/eventos",      icon: "🎉", label: "Eventos" },
   { href: "/dashboard/agendamentos", icon: "📅", label: "Agenda" },
   { href: "/dashboard/assinatura",   icon: "💳", label: "Assinatura" },
+];
+
+// Bottom nav items — most important 5 for mobile
+const BOTTOM_NAV = [
+  { href: "/dashboard",              icon: "📊", label: "Início" },
+  { href: "/dashboard/perfil",       icon: "✏️", label: "Perfil" },
+  { href: "/dashboard/eventos",      icon: "🎉", label: "Eventos" },
+  { href: "/dashboard/agendamentos", icon: "📅", label: "Agenda" },
+  { href: "/dashboard/assinatura",   icon: "💳", label: "Plano" },
 ];
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -19,19 +29,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <>
       <style>{`
-        /* ─── Dashboard layout ─────────────────────── */
         .dash-wrap {
           display: flex;
           min-height: 100vh;
           background: var(--bg);
-          /* Reserve space for mobile bottom nav */
           padding-bottom: 64px;
         }
-        @media (min-width: 768px) {
-          .dash-wrap { padding-bottom: 0; }
-        }
+        @media (min-width: 768px) { .dash-wrap { padding-bottom: 0; } }
 
-        /* ─── Sidebar — hidden on mobile ──────────── */
         .dash-sidebar {
           display: none;
         }
@@ -47,21 +52,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
             position: sticky;
             top: 0;
             height: 100vh;
+            overflow-y: auto;
           }
         }
 
-        /* ─── Main content ─────────────────────────── */
         .dash-main {
           flex: 1;
           padding: 1rem;
           overflow-y: auto;
           min-width: 0;
         }
-        @media (min-width: 768px) {
-          .dash-main { padding: 2rem; }
-        }
+        @media (min-width: 768px) { .dash-main { padding: 2rem; } }
 
-        /* ─── Bottom nav — mobile only ────────────── */
         .dash-bottom-nav {
           display: flex;
           position: fixed;
@@ -73,9 +75,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           padding: 0 4px;
           padding-bottom: env(safe-area-inset-bottom, 0);
         }
-        @media (min-width: 768px) {
-          .dash-bottom-nav { display: none; }
-        }
+        @media (min-width: 768px) { .dash-bottom-nav { display: none; } }
 
         .dash-bottom-item {
           flex: 1;
@@ -88,27 +88,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
           color: var(--text-hint);
           font-size: 10px;
           font-weight: 500;
-          padding: 8px 4px;
+          padding: 8px 2px;
           border-radius: var(--radius-sm);
           transition: color 0.15s;
-          min-width: 0;
         }
-        .dash-bottom-item.active {
-          color: var(--ocean);
-        }
-        .dash-bottom-item span:first-child {
-          font-size: 20px;
-          line-height: 1;
-        }
-        .dash-bottom-label {
-          overflow: hidden;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          width: 100%;
-          text-align: center;
-        }
+        .dash-bottom-item span:first-child { font-size: 20px; line-height: 1; }
+        .dash-bottom-item.active { color: var(--ocean); }
 
-        /* ─── Sidebar nav item ─────────────────────── */
         .dash-nav-item {
           display: flex;
           align-items: center;
@@ -122,17 +108,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
           margin-bottom: 2px;
         }
         .dash-nav-item:hover { background: var(--bg); color: var(--text); }
-        .dash-nav-item.active { background: var(--ocean-50); color: var(--ocean); font-weight: 600; }
+
+        .dash-mobile-top {
+          position: sticky; top: 0; z-index: 50;
+          background: var(--ocean); color: white;
+          padding: 0 1rem; height: 52px;
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        @media (min-width: 768px) { .dash-mobile-top { display: none; } }
       `}</style>
 
       {/* Mobile top bar */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "var(--ocean)", color: "white",
-        padding: "0 1rem",
-        height: 52,
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }} className="show-mobile">
+      <div className="dash-mobile-top">
         <Link href="/" style={{ fontFamily: "var(--font-display)", fontSize: 16, color: "white", textDecoration: "none" }}>
           🌊 Guarujá <em style={{ color: "var(--sand-dark)" }}>Guias</em>
         </Link>
@@ -142,20 +129,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <div className="dash-wrap">
         {/* Sidebar (desktop) */}
         <aside className="dash-sidebar">
-          <div style={{ padding: "0 1rem 1.5rem", borderBottom: "1px solid var(--border)", marginBottom: "0.5rem" }}>
+          <div style={{ padding: "0 1rem 1.25rem", borderBottom: "1px solid var(--border)", marginBottom: "0.5rem" }}>
             <Link href="/" style={{ textDecoration: "none" }}>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 17, color: "var(--ocean)" }}>
                 🌊 Guarujá <em style={{ color: "var(--sand-dark)" }}>Guias</em>
               </div>
             </Link>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 3 }}>Painel do comerciante</div>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Painel do comerciante</div>
           </div>
 
           <nav style={{ flex: 1, padding: "0 8px" }}>
             {NAV.map(({ href, icon, label }) => (
               <Link key={href} href={href} className="dash-nav-item">
-                <span>{icon}</span>
-                <span>{label}</span>
+                <span>{icon}</span><span>{label}</span>
               </Link>
             ))}
           </nav>
@@ -166,18 +152,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </aside>
 
-        {/* Main */}
-        <main className="dash-main">
-          {children}
-        </main>
+        <main className="dash-main">{children}</main>
       </div>
 
       {/* Bottom nav (mobile) */}
       <nav className="dash-bottom-nav">
-        {NAV.slice(0, 5).map(({ href, icon, label }) => (
+        {BOTTOM_NAV.map(({ href, icon, label }) => (
           <Link key={href} href={href} className="dash-bottom-item">
             <span>{icon}</span>
-            <span className="dash-bottom-label">{label}</span>
+            <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%", textAlign: "center" }}>
+              {label}
+            </span>
           </Link>
         ))}
       </nav>
