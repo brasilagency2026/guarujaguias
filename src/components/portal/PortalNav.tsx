@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const NAV_LINKS = [
@@ -14,134 +14,181 @@ export default function PortalNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Close menu on route change
+  useEffect(() => { setMenuOpen(false); }, [pathname]);
+
+  // Prevent body scroll when menu open
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
+
   return (
-    <nav style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-      height: "var(--nav-h)",
-      background: "rgba(10,79,110,0.97)",
-      backdropFilter: "blur(12px)",
-      borderBottom: "1px solid rgba(255,255,255,0.1)",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 1.5rem",
-    }}>
+    <>
+      <nav style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
+        height: "var(--nav-h)",
+        background: "rgba(10,79,110,0.97)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: "1px solid rgba(255,255,255,0.1)",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 1rem",
+      }}>
+        {/* Logo */}
+        <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 20 }}>🌊</span>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: 18, color: "white", fontWeight: 600 }}>
+            Guarujá <span style={{ color: "var(--sand-dark)", fontStyle: "italic" }}>Guias</span>
+          </span>
+        </Link>
 
-      {/* Logo */}
-      <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 22 }}>🌊</span>
-        <span style={{ fontFamily: "var(--font-display)", fontSize: 20, color: "white", fontWeight: 600 }}>
-          Guarujá <span style={{ color: "var(--sand-dark)", fontStyle: "italic" }}>Guias</span>
-        </span>
-      </Link>
+        {/* Desktop links */}
+        <div style={{ display: "flex", alignItems: "center", gap: 2 }} className="hide-mobile-flex">
+          {NAV_LINKS.map(({ href, label }) => (
+            <Link key={href} href={href} style={{
+              color: pathname === href ? "white" : "rgba(255,255,255,0.72)",
+              textDecoration: "none", padding: "7px 12px", borderRadius: "var(--radius-sm)",
+              fontSize: 14, fontWeight: pathname === href ? 600 : 400,
+              background: pathname === href ? "rgba(255,255,255,0.15)" : "transparent",
+              transition: "all 0.15s",
+            }}>
+              {label}
+            </Link>
+          ))}
+        </div>
 
-      {/* Desktop links */}
-      <div style={{ display: "flex", alignItems: "center", gap: 2 }} className="hide-mobile">
-        {NAV_LINKS.map(({ href, label }) => (
+        {/* Right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <SignedIn>
+            <Link href="/dashboard" className="hide-mobile" style={{
+              color: "rgba(255,255,255,0.8)", textDecoration: "none",
+              fontSize: 13, padding: "6px 10px",
+            }}>
+              Meu painel
+            </Link>
+            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: { width: 32, height: 32 } } }} />
+          </SignedIn>
+
+          <SignedOut>
+            <Link href="/login" className="hide-mobile" style={{
+              color: "rgba(255,255,255,0.8)", textDecoration: "none",
+              fontSize: 13, padding: "6px 10px",
+            }}>
+              Entrar
+            </Link>
+            <Link href="/cadastro" className="hide-mobile" style={{
+              background: "var(--sand-dark)", color: "white", textDecoration: "none",
+              padding: "8px 14px", borderRadius: "var(--radius-sm)",
+              fontSize: 13, fontWeight: 700,
+            }}>
+              + Cadastrar
+            </Link>
+          </SignedOut>
+
+          {/* Hamburger — always visible */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              background: menuOpen ? "rgba(255,255,255,0.15)" : "transparent",
+              border: "none", color: "white",
+              cursor: "pointer", fontSize: 22, padding: "8px",
+              borderRadius: "var(--radius-sm)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 40, height: 40,
+              transition: "background 0.15s",
+            }}
+            aria-label={menuOpen ? "Fechar menu" : "Abrir menu"}
+          >
+            {menuOpen ? "✕" : "☰"}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile drawer overlay */}
+      {menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 999,
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(2px)",
+          }}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      <div style={{
+        position: "fixed",
+        top: "var(--nav-h)", right: 0, bottom: 0,
+        width: "min(280px, 80vw)",
+        background: "#0a4f6e",
+        zIndex: 1000,
+        display: "flex", flexDirection: "column",
+        padding: "1rem",
+        gap: 6,
+        transform: menuOpen ? "translateX(0)" : "translateX(100%)",
+        transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflowY: "auto",
+        boxShadow: menuOpen ? "-4px 0 24px rgba(0,0,0,0.3)" : "none",
+      }}>
+        {NAV_LINKS.map(({ href, label, icon }) => (
           <Link key={href} href={href} style={{
-            color: pathname === href ? "white" : "rgba(255,255,255,0.72)",
-            textDecoration: "none", padding: "7px 14px", borderRadius: "var(--radius-sm)",
-            fontSize: 14, fontWeight: pathname === href ? 600 : 400,
-            background: pathname === href ? "rgba(255,255,255,0.15)" : "transparent",
-            transition: "all 0.15s",
+            color: "white", textDecoration: "none",
+            padding: "14px 16px",
+            borderRadius: "var(--radius)",
+            fontSize: 16, fontWeight: 500,
+            background: pathname === href ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", gap: 12,
+            minHeight: 52,
           }}>
+            <span style={{ fontSize: 20 }}>{icon}</span>
             {label}
           </Link>
         ))}
-      </div>
 
-      {/* Right CTAs */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.15)", margin: "8px 0" }} />
 
-        {/* Show dashboard link + UserButton when logged in */}
         <SignedIn>
           <Link href="/dashboard" style={{
-            color: "rgba(255,255,255,0.8)", textDecoration: "none",
-            fontSize: 13, padding: "6px 12px",
-          }} className="hide-mobile">
+            color: "white", textDecoration: "none",
+            padding: "14px 16px", borderRadius: "var(--radius)",
+            fontSize: 16, fontWeight: 500,
+            background: "rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", gap: 12,
+            minHeight: 52,
+          }}>
+            <span style={{ fontSize: 20 }}>📊</span>
             Meu painel
           </Link>
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{
-              elements: {
-                avatarBox: { width: 32, height: 32 },
-              },
-            }}
-          />
         </SignedIn>
 
-        {/* Show login + register when logged out */}
+        <Link href="/cadastro" style={{
+          color: "white", textDecoration: "none",
+          padding: "14px 16px", borderRadius: "var(--radius)",
+          fontSize: 16, fontWeight: 700,
+          background: "var(--sand-dark)",
+          display: "flex", alignItems: "center", gap: 12,
+          minHeight: 52,
+        }}>
+          <span style={{ fontSize: 20 }}>＋</span>
+          Cadastrar negócio
+        </Link>
+
         <SignedOut>
           <Link href="/login" style={{
-            color: "rgba(255,255,255,0.8)", textDecoration: "none",
-            fontSize: 13, padding: "6px 12px",
-          }} className="hide-mobile">
+            color: "white", textDecoration: "none",
+            padding: "14px 16px", borderRadius: "var(--radius)",
+            fontSize: 16, fontWeight: 500,
+            background: "rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", gap: 12,
+            minHeight: 52,
+          }}>
+            <span style={{ fontSize: 20 }}>🔑</span>
             Entrar
           </Link>
-          <Link href="/cadastro" style={{
-            background: "var(--sand-dark)", color: "white", textDecoration: "none",
-            padding: "8px 18px", borderRadius: "var(--radius-sm)",
-            fontSize: 13, fontWeight: 700,
-          }}>
-            + Cadastrar negócio
-          </Link>
         </SignedOut>
-
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{
-            background: "transparent", border: "none", color: "white",
-            cursor: "pointer", fontSize: 20, padding: "4px",
-          }}
-          aria-label="Menu"
-        >
-          {menuOpen ? "✕" : "☰"}
-        </button>
       </div>
-
-      {/* Mobile drawer */}
-      {menuOpen && (
-        <div style={{
-          position: "fixed", top: "var(--nav-h)", left: 0, right: 0, bottom: 0,
-          background: "rgba(10,79,110,0.98)", zIndex: 999,
-          display: "flex", flexDirection: "column", padding: "2rem", gap: 8,
-        }}>
-          {NAV_LINKS.map(({ href, label, icon }) => (
-            <Link key={href} href={href} onClick={() => setMenuOpen(false)} style={{
-              color: "white", textDecoration: "none", padding: "14px 16px",
-              borderRadius: "var(--radius)", fontSize: 18,
-              background: "rgba(255,255,255,0.1)",
-            }}>
-              {icon} {label}
-            </Link>
-          ))}
-          <SignedIn>
-            <Link href="/dashboard" onClick={() => setMenuOpen(false)} style={{
-              color: "white", textDecoration: "none", padding: "14px 16px",
-              borderRadius: "var(--radius)", fontSize: 18,
-              background: "rgba(255,255,255,0.1)",
-            }}>
-              📊 Meu painel
-            </Link>
-          </SignedIn>
-          <Link href="/cadastro" onClick={() => setMenuOpen(false)} style={{
-            color: "white", textDecoration: "none", padding: "14px 16px",
-            borderRadius: "var(--radius)", fontSize: 18,
-            background: "var(--sand-dark)", fontWeight: 700, marginTop: 8,
-          }}>
-            ＋ Cadastrar negócio
-          </Link>
-          <SignedOut>
-            <Link href="/login" onClick={() => setMenuOpen(false)} style={{
-              color: "white", textDecoration: "none", padding: "14px 16px",
-              borderRadius: "var(--radius)", fontSize: 18,
-              background: "rgba(255,255,255,0.1)",
-            }}>
-              🔑 Entrar
-            </Link>
-          </SignedOut>
-        </div>
-      )}
-    </nav>
+    </>
   );
 }

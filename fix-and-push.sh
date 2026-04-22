@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: cast ptBR localization as any to bypass Clerk type version conflict"}
+MSG=${1:-"feat: full responsive design for mobile — nav drawer, bottom tab dashboard, map bottom sheet, mobile-first CSS"}
 echo "▶ Committing..."
 git add -A && git status --short && git commit -m "$MSG"
 echo "▶ Pushing..."
