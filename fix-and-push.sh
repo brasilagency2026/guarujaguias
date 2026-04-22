@@ -1,13 +1,11 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: pin @clerk/nextjs to v4 for convex/react-clerk compatibility, fix UseAuth type conflict"}
+MSG=${1:-"fix: upgrade Next.js to 14.2.28 and use Clerk v5 with useAuth cast"}
 
-echo "▶ [1/4] Installing correct Clerk version..."
-# Remove conflicting v5 packages
-npm uninstall @clerk/clerk-react @clerk/types 2>/dev/null || true
-# Install Clerk v4 (compatible with convex/react-clerk)
-npm install @clerk/nextjs@^4.29.12
-echo "✅ Clerk v4 installed"
+echo "▶ [1/4] Installing updated packages..."
+npm install next@14.2.28 @clerk/nextjs@^5.7.2
+npm uninstall @clerk/clerk-react 2>/dev/null || true
+echo "✅ Packages updated"
 
 echo ""
 echo "▶ [2/4] Committing..."
