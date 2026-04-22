@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: add @clerk/localizations package for pt-BR support"}
-echo "▶ Installing @clerk/localizations..."
-npm install @clerk/localizations@^3.0.0
-echo "✅ Installed"
+MSG=${1:-"fix: cast ptBR localization as any to bypass Clerk type version conflict"}
 echo "▶ Committing..."
 git add -A && git status --short && git commit -m "$MSG"
 echo "▶ Pushing..."
