@@ -1,28 +1,19 @@
 #!/bin/bash
 set -e
-MSG=${1:-"fix: delete corrupted package-lock.json and regenerate clean"}
+MSG=${1:-"fix: add events:listForHomepage, listMyEvents, activateFeatured to Convex + update schema"}
 
-echo "▶ [1/5] Removing corrupted package-lock.json..."
-rm -f package-lock.json
-echo "✅ Removed"
-
-echo ""
-echo "▶ [2/5] Cleaning npm cache..."
-npm cache clean --force
-echo "✅ Cache cleaned"
-
-echo ""
-echo "▶ [3/5] Fresh install..."
-npm install
-echo "✅ Installed clean"
-
-echo ""
-echo "▶ [4/5] Committing..."
+echo "▶ [1/3] Committing new Convex files..."
 git add -A && git status --short && git commit -m "$MSG"
-git push origin main
-echo "✅ Pushed — Vercel will auto-deploy with fresh package-lock.json"
 
 echo ""
-echo "▶ [5/5] Deploying Convex..."
+echo "▶ [2/3] Pushing to GitHub..."
+git push origin main
+echo "✅ Pushed"
+
+echo ""
+echo "▶ [3/3] Deploying Convex backend (critical step)..."
 npx convex deploy
-echo "✅ Done! https://guarujaguias.com.br"
+echo "✅ Convex deployed with new functions!"
+
+echo ""
+echo "Done! https://guarujaguias.com.br"
