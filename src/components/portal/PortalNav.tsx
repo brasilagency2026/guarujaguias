@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignedIn, SignedOut, UserButton, SignUpButton } from "@clerk/nextjs";
 
 const NAV_LINKS = [
   { href: "/mapa",      label: "Mapa",      icon: "🗺️" },
@@ -77,13 +77,15 @@ export default function PortalNav() {
             }}>
               Entrar
             </Link>
-            <Link href="/cadastro" className="hide-mobile" style={{
-              background: "var(--sand-dark)", color: "white", textDecoration: "none",
-              padding: "8px 14px", borderRadius: "var(--radius-sm)",
-              fontSize: 13, fontWeight: 700,
-            }}>
-              + Cadastrar
-            </Link>
+            <SignUpButton>
+              <button className="hide-mobile" style={{
+                background: "var(--sand-dark)", color: "white", textDecoration: "none",
+                padding: "8px 14px", borderRadius: "var(--radius-sm)",
+                fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
+              }}>
+                + Cadastrar
+              </button>
+            </SignUpButton>
           </SignedOut>
 
           {/* Hamburger — always visible */}
@@ -163,17 +165,35 @@ export default function PortalNav() {
           </Link>
         </SignedIn>
 
-        <Link href="/cadastro" style={{
-          color: "white", textDecoration: "none",
-          padding: "14px 16px", borderRadius: "var(--radius)",
-          fontSize: 16, fontWeight: 700,
-          background: "var(--sand-dark)",
-          display: "flex", alignItems: "center", gap: 12,
-          minHeight: 52,
-        }}>
-          <span style={{ fontSize: 20 }}>＋</span>
-          Cadastrar negócio
-        </Link>
+        <SignedIn>
+          <Link href="/cadastro" style={{
+            color: "white", textDecoration: "none",
+            padding: "14px 16px", borderRadius: "var(--radius)",
+            fontSize: 16, fontWeight: 700,
+            background: "var(--sand-dark)",
+            display: "flex", alignItems: "center", gap: 12,
+            minHeight: 52,
+          }}>
+            <span style={{ fontSize: 20 }}>＋</span>
+            Cadastrar negócio
+          </Link>
+        </SignedIn>
+
+        <SignedOut>
+          <SignUpButton>
+            <button style={{
+              color: "white", textDecoration: "none",
+              padding: "14px 16px", borderRadius: "var(--radius)",
+              fontSize: 16, fontWeight: 700,
+              background: "var(--sand-dark)",
+              display: "flex", alignItems: "center", gap: 12,
+              minHeight: 52, border: "none", cursor: "pointer",
+            }}>
+              <span style={{ fontSize: 20 }}>＋</span>
+              Cadastrar negócio
+            </button>
+          </SignUpButton>
+        </SignedOut>
 
         <SignedOut>
           <Link href="/login" style={{
