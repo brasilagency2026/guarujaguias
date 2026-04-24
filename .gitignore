@@ -42,3 +42,5 @@ yarn-error.log*
 # ⚠️ NOTE: convex/_generated/ must NOT be ignored
 # It contains auto-generated types needed for the Vercel build.
 # Run `npx convex dev` to regenerate locally after schema changes.
+
+.vercel
