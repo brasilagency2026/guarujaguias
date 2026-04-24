@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "sonner";
 import MiniSiteConfigurator from "../../../components/forms/MiniSiteConfigurator";
+import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 
 const STEPS = ["Negócio", "Localização", "Plano", "Mini-site"];
 
@@ -30,6 +31,8 @@ export default function RegisterClient() {
   const router = useRouter();
   const params = useSearchParams();
   const initialPlan = params.get("plano") === "pro" ? "pro" : "free";
+
+  const { isLoaded, isSignedIn } = useUser();
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -78,6 +81,33 @@ export default function RegisterClient() {
     if (step === 3) return !form.wantsMiniSite || form.miniSiteConfig;
     return true;
   };
+
+  // If Clerk auth state is not yet loaded, avoid rendering UI flicker
+  if (!isLoaded) return null;
+
+  // Require sign-in before showing the registration form
+  if (!isSignedIn) {
+    return (
+      <div style={{ maxWidth: 680, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+        <div className="card" style={{ padding: "1.75rem", textAlign: "center" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: "1rem" }}>
+            Antes de cadastrar, faça seu cadastro ou entre
+          </h2>
+          <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
+            Para registrar seu estabelecimento precisamos vincular sua conta. Use o botão abaixo para criar uma conta ou entrar.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
+            <SignUpButton>
+              <button className="btn btn-primary">Cadastrar</button>
+            </SignUpButton>
+            <SignInButton>
+              <button className="btn btn-secondary">Entrar</button>
+            </SignInButton>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleNext = async () => {
     if (step === 1) await geocodeAddress();
