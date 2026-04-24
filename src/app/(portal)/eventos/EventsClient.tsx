@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import Link from "next/link";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 
 const EVENT_CATS = [
   { slug: "",         label: "Todos",       icon: "🗓️" },
@@ -107,7 +108,14 @@ export default function EventsClient() {
             <div style={{ fontWeight: 700, fontSize: 14 }}>🎉 Tem um evento em Guarujá?</div>
             <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Divulgue grátis para toda a comunidade</div>
           </div>
-          <Link href="/cadastro" className="btn btn-primary btn-sm">Divulgar evento →</Link>
+          <SignedIn>
+            <Link href="/cadastro" className="btn btn-primary btn-sm">Divulgar evento →</Link>
+          </SignedIn>
+          <SignedOut>
+            <SignUpButton>
+              <button className="btn btn-primary btn-sm">Divulgar evento →</button>
+            </SignUpButton>
+          </SignedOut>
         </div>
 
         {Object.keys(grouped).length === 0 ? (

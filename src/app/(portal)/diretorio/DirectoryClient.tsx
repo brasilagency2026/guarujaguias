@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import BusinessCard from "../../../components/portal/BusinessCard";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 
 // avgRating is not in the DB schema — it's computed at query time.
 // We extend the base type so TypeScript accepts it throughout this component.
@@ -254,7 +255,14 @@ export default function DirectoryClient() {
             <div style={{ fontSize: 56, marginBottom: 16 }}>🔍</div>
             <h3 style={{ fontFamily: "var(--font-display)", fontSize: 22, marginBottom: 8 }}>Nenhum resultado encontrado</h3>
             <p style={{ color: "var(--text-muted)", marginBottom: 20 }}>Tente outros filtros ou cadastre seu negócio gratuitamente</p>
-            <a href="/cadastro" className="btn btn-primary">Cadastrar meu negócio</a>
+            <SignedIn>
+              <a href="/cadastro" className="btn btn-primary">Cadastrar meu negócio</a>
+            </SignedIn>
+            <SignedOut>
+              <SignUpButton>
+                <button className="btn btn-primary">Cadastrar meu negócio</button>
+              </SignUpButton>
+            </SignedOut>
           </div>
         )}
 

@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import BusinessCard from "../../components/portal/BusinessCard";
 import EventsStrip from "../../components/portal/EventsStrip";
 import Link from "next/link";
+import { SignedIn, SignedOut, SignUpButton } from "@clerk/nextjs";
 
 // Eventos removed — shown separately in EventsStrip
 const CATEGORIES = [
@@ -214,7 +215,14 @@ export default function HomeClient() {
                   <li key={i} style={{ fontSize: 13, color: i.startsWith("❌") ? "var(--text-hint)" : "var(--text)" }}>{i}</li>
                 ))}
               </ul>
-              <Link href="/cadastro" className="btn btn-secondary btn-full">Cadastrar grátis</Link>
+              <SignedIn>
+                <Link href="/cadastro" className="btn btn-secondary btn-full">Cadastrar grátis</Link>
+              </SignedIn>
+              <SignedOut>
+                <SignUpButton>
+                  <button className="btn btn-secondary btn-full">Cadastrar grátis</button>
+                </SignUpButton>
+              </SignedOut>
             </div>
 
             {/* Pro plan */}
@@ -228,7 +236,14 @@ export default function HomeClient() {
                   <li key={i} style={{ fontSize: 13 }}>{i}</li>
                 ))}
               </ul>
-              <Link href="/cadastro?plano=pro" className="btn btn-primary btn-full">R$ 50/mês</Link>
+              <SignedIn>
+                <Link href="/cadastro?plano=pro" className="btn btn-primary btn-full">R$ 50/mês</Link>
+              </SignedIn>
+              <SignedOut>
+                <SignUpButton>
+                  <button className="btn btn-primary btn-full">R$ 50/mês</button>
+                </SignUpButton>
+              </SignedOut>
             </div>
 
             {/* Event plan */}
