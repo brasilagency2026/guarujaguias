@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
@@ -62,6 +62,20 @@ export default function RegisterClient() {
   });
 
   const set = (key: string, val: any) => setForm((f) => ({ ...f, [key]: val }));
+
+  // Ensure we don't stay on the Mini-site step if the user switches to the free plan
+  useEffect(() => {
+    const effectiveLen = form.plan === "free" ? STEPS.slice(0, 3).length : STEPS.length;
+    if (step >= effectiveLen) {
+      setStep(effectiveLen - 1);
+    }
+    if (form.plan === "free") {
+      set("wantsMiniSite", false);
+      set("miniSiteConfig", null);
+    }
+    // only run when plan changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.plan]);
 
   const register = useMutation(api.businesses.register);
 
