@@ -5,7 +5,10 @@ import { useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "sonner";
 import MiniSiteConfigurator from "../../../components/forms/MiniSiteConfigurator";
-import { SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
+import { SignInButton, useUser } from "@clerk/nextjs";
+
+const SignUp = dynamic(() => import("@clerk/nextjs").then((m) => m.SignUp), { ssr: false });
 
 const STEPS = ["Negócio", "Localização", "Plano", "Mini-site"];
 
@@ -85,21 +88,25 @@ export default function RegisterClient() {
   // If Clerk auth state is not yet loaded, avoid rendering UI flicker
   if (!isLoaded) return null;
 
-  // Require sign-in before showing the registration form
+  // If not signed in, show Clerk SignUp inline so it matches site design
   if (!isSignedIn) {
     return (
-      <div style={{ maxWidth: 680, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
         <div className="card" style={{ padding: "1.75rem", textAlign: "center" }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 20, marginBottom: "1rem" }}>
-            Antes de cadastrar, faça seu cadastro ou entre
+            Crie sua conta para continuar
           </h2>
-          <p style={{ color: "var(--text-muted)", marginBottom: "1.5rem" }}>
-            Para registrar seu estabelecimento precisamos vincular sua conta. Use o botão abaixo para criar uma conta ou entrar.
+          <p style={{ color: "var(--text-muted)", marginBottom: "1rem" }}>
+            Para registrar seu estabelecimento precisamos vincular sua conta. Use o formulário abaixo para criar uma conta ou entrar.
           </p>
-          <div style={{ display: "flex", justifyContent: "center", gap: 12 }}>
-            <SignUpButton>
-              <button className="btn btn-primary">Cadastrar</button>
-            </SignUpButton>
+
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <div style={{ width: "100%", maxWidth: 520 }}>
+              <SignUp />
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
             <SignInButton>
               <button className="btn btn-secondary">Entrar</button>
             </SignInButton>
