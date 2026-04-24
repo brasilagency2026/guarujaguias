@@ -20,7 +20,7 @@ export function ConvexClientProvider({ children }: { children: React.ReactNode }
           fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial",
           borderRadius: "8px",
         },
-      }}
+      } as any}
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth as any}>
         {children}
