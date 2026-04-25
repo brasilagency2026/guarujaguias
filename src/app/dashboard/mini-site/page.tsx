@@ -1,30 +1,99 @@
 "use client";
-import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useState, useEffect, useMemo } from "react";
+import { ConvexHttpClient } from "convex/browser";
+import Link from "next/link";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { toast } from "sonner";
 import MiniSiteConfigurator from "../../../components/forms/MiniSiteConfigurator";
-import Link from "next/link";
+import { api } from "../../../../convex/_generated/api";
 
 export default function MiniSitePage() {
+  const { isLoaded, isSignedIn } = useUser();
+  const convexClient = useMemo(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!), []);
+  const { getToken } = useAuth();
+
+  const [business, setBusiness] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [config, setConfig] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  // const updateMiniSite = useMutation(api.miniSites.update);
 
-  // Mock business - replace with useQuery(api.businesses.getMyBusiness)
-  const business = { name: "Meu Negócio", slug: "meu-negocio", category: "beleza", plan: "pro", hasMiniSite: true };
+  // Load current business for this user
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoading(true);
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        setBusiness(null);
+        setLoading(false);
+        return;
+      }
+      try {
+        const token = await getToken({ template: "convex" }).catch(() => null);
+        if (token) convexClient.setAuth(token as any);
+        const res = await convexClient.query(api.businesses.getMyBusiness);
+        if (!cancelled) setBusiness(res);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setBusiness(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [isLoaded, isSignedIn, convexClient]);
+
+  if (!isLoaded) return null;
+  if (!isSignedIn) {
+    return (
+      <div style={{ maxWidth: 860 }}>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28 }}>Entre para gerenciar seu mini-site</h1>
+          <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Faça login para acessar o painel do seu negócio.</p>
+          <div style={{ marginTop: 16 }}>
+            <Link href="/registro" className="btn btn-primary">Criar conta / Entrar</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) return null;
+
+  if (!business) {
+    return (
+      <div style={{ maxWidth: 860 }}>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28 }}>Você ainda não cadastrou um negócio</h1>
+          <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Cadastre seu estabelecimento para ter acesso ao painel e ao mini-site.</p>
+          <div style={{ marginTop: 16 }}>
+            <Link href="/cadastro" className="btn btn-primary">Cadastrar meu estabelecimento</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const canEdit = business.plan === "pro";
 
   const handleSave = async () => {
     if (!config) return;
+    if (!canEdit) {
+      toast.error("O mini-site requer o Plano Pro. Faça upgrade para editar.");
+      return;
+    }
     setSaving(true);
     try {
-      // await updateMiniSite({ businessId: business._id, config });
-      await new Promise(r => setTimeout(r, 800)); // mock delay
+      // TODO: call real update mutation (api.miniSites.update)
+      await new Promise((r) => setTimeout(r, 800));
       setSaved(true);
       toast.success("Mini-site atualizado com sucesso!");
       setTimeout(() => setSaved(false), 3000);
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e.message || "Erro ao salvar");
     } finally {
       setSaving(false);
     }
@@ -48,9 +117,9 @@ export default function MiniSitePage() {
           </Link>
           <button
             onClick={handleSave}
-            disabled={!config || saving}
+            disabled={!config || saving || !canEdit}
             className="btn btn-primary btn-sm"
-            style={{ opacity: (!config || saving) ? 0.7 : 1 }}
+            style={{ opacity: (!config || saving || !canEdit) ? 0.7 : 1 }}
           >
             {saving ? "Salvando..." : saved ? "✓ Salvo!" : "💾 Salvar alterações"}
           </button>
@@ -93,9 +162,9 @@ export default function MiniSitePage() {
           </Link>
           <button
             onClick={handleSave}
-            disabled={!config || saving}
+            disabled={!config || saving || !canEdit}
             className="btn btn-primary"
-            style={{ opacity: (!config || saving) ? 0.7 : 1, minWidth: 180 }}
+            style={{ opacity: (!config || saving || !canEdit) ? 0.7 : 1, minWidth: 180 }}
           >
             {saving ? "Salvando..." : saved ? "✓ Alterações salvas!" : "💾 Salvar alterações"}
           </button>
