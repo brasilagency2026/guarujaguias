@@ -1,12 +1,42 @@
 "use client";
-import { useQuery } from "convex/react";
+import { useEffect, useState } from "react";
+import { useConvexClient } from "convex/react";
 import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 
 export default function DashboardPage() {
   const { isLoaded, isSignedIn } = useUser();
-  const myBusiness = useQuery(api.businesses.getMyBusiness);
+  const client = useConvexClient();
+  const [biz, setBiz] = useState<any | null>(null);
+  const [loadingBiz, setLoadingBiz] = useState(true);
+
+  // Load business only after Clerk auth state is available and user is signed in
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setLoadingBiz(true);
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        setBiz(null);
+        setLoadingBiz(false);
+        return;
+      }
+      try {
+        const res = await client.query(api.businesses.getMyBusiness);
+        if (!cancelled) setBiz(res);
+      } catch (e) {
+        console.error(e);
+        if (!cancelled) setBiz(null);
+      } finally {
+        if (!cancelled) setLoadingBiz(false);
+      }
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoaded, isSignedIn, client]);
 
   // If auth state not loaded yet, avoid flicker
   if (!isLoaded) return null;
@@ -26,7 +56,8 @@ export default function DashboardPage() {
     );
   }
 
-  const biz = myBusiness;
+  // While we fetch the business from Convex, avoid rendering the management UI
+  if (loadingBiz) return null;
 
   if (!biz) {
     return (
