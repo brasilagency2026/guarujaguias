@@ -3,13 +3,14 @@ import { useEffect, useState, useMemo } from "react";
 import { ConvexHttpClient } from "convex/browser";
 import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 
 export default function DashboardPage() {
   const { isLoaded, isSignedIn } = useUser();
   const convexClient = useMemo(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!), []);
   const [biz, setBiz] = useState<any | null>(null);
   const [loadingBiz, setLoadingBiz] = useState(true);
+  const { getToken } = useAuth();
 
   // Load business only after Clerk auth state is available and user is signed in
   useEffect(() => {
@@ -23,6 +24,10 @@ export default function DashboardPage() {
         return;
       }
       try {
+        // Attach Clerk Convex token so Convex can authenticate the request
+        const token = await getToken({ template: "convex" }).catch(() => null);
+        if (token) convexClient.setAuth(token as any);
+
         const res = await convexClient.query(api.businesses.getMyBusiness);
         if (!cancelled) setBiz(res);
       } catch (e) {
@@ -36,7 +41,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [isLoaded, isSignedIn, client]);
+  }, [isLoaded, isSignedIn, convexClient]);
 
   // If auth state not loaded yet, avoid flicker
   if (!isLoaded) return null;
