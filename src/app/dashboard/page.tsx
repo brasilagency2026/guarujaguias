@@ -1,25 +1,46 @@
 "use client";
 import { useQuery } from "convex/react";
 import Link from "next/link";
+import { api } from "../../../convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
 
 export default function DashboardPage() {
-  // In production: const myBusiness = useQuery(api.businesses.getMyBusiness);
-  // Using mock data for structure demonstration
-  const mockBusiness = {
-    name: "Cantinho do Pescador",
-    slug: "cantinho-do-pescador",
-    status: "active",
-    plan: "pro",
-    hasMiniSite: true,
-    viewCount: 1247,
-    clickWhatsapp: 89,
-    clickWebsite: 34,
-    category: "restaurante",
-    neighborhood: "Pitangueiras",
-    createdAt: Date.now() - 60 * 24 * 3600000,
-  };
+  const { isLoaded, isSignedIn } = useUser();
+  const myBusiness = useQuery(api.businesses.getMyBusiness);
 
-  const biz = mockBusiness;
+  // If auth state not loaded yet, avoid flicker
+  if (!isLoaded) return null;
+
+  // If not signed-in, show a simple prompt to login/register
+  if (!isSignedIn) {
+    return (
+      <div style={{ maxWidth: 860 }}>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28 }}>Olá!</h1>
+          <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Entre para gerenciar seu negócio ou cadastrar um novo estabelecimento.</p>
+          <div style={{ marginTop: 16 }}>
+            <Link href="/registro" className="btn btn-primary">Criar conta / Entrar</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const biz = myBusiness;
+
+  if (!biz) {
+    return (
+      <div style={{ maxWidth: 860 }}>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28 }}>Você ainda não cadastrou um negócio</h1>
+          <p style={{ color: "var(--text-muted)", marginTop: 8 }}>Cadastre seu estabelecimento gratuitamente para aparecer no portal.</p>
+          <div style={{ marginTop: 16 }}>
+            <Link href="/cadastro" className="btn btn-primary">Cadastrar meu estabelecimento</Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const stats = [
     { label: "Visualizações", value: biz.viewCount.toLocaleString("pt-BR"), icon: "👁️", color: "var(--ocean)" },

@@ -6,7 +6,7 @@ import { api } from "../../../../convex/_generated/api";
 import { toast } from "sonner";
 import MiniSiteConfigurator from "../../../components/forms/MiniSiteConfigurator";
 import dynamic from "next/dynamic";
-import { SignInButton, useUser } from "@clerk/nextjs";
+import { SignInButton, useUser, useAuth } from "@clerk/nextjs";
 
 const SignUp = dynamic(() => import("@clerk/nextjs").then((m) => m.SignUp), { ssr: false });
 
@@ -36,6 +36,7 @@ export default function RegisterClient() {
   const initialPlan = params.get("plano") === "pro" ? "pro" : "free";
 
   const { isLoaded, isSignedIn } = useUser();
+  const { getToken } = useAuth();
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -146,6 +147,21 @@ export default function RegisterClient() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      // Ensure a valid Clerk token for Convex before calling protected mutation
+      if (getToken) {
+        try {
+          const tk = await getToken({ template: "convex", skipCache: true } as any);
+          if (!tk) {
+            toast.error("Não autenticado — faça login novamente e tente novamente.");
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          toast.error("Erro de autenticação. Recarregue a página e tente novamente.");
+          setLoading(false);
+          return;
+        }
+      }
       const result = await register({
         name: form.name,
         category: form.category as any,

@@ -76,6 +76,17 @@ export const search = query({
   },
 });
 
+// Return the business owned by the current authenticated Clerk user (if any)
+export const getMyBusiness = query({
+  handler: async (ctx) => {
+    const clerkId = await requireAuth(ctx);
+    return ctx.db
+      .query("businesses")
+      .withIndex("by_owner", (q: any) => q.eq("ownerId", clerkId))
+      .unique();
+  },
+});
+
 export const getNearby = query({
   args: {
     lat: v.number(),
