@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import DashboardSidebarClient from "../../components/dashboard/DashboardSidebarClient";
 
 const NAV = [
   { href: "/dashboard",              icon: "📊", label: "Visão geral" },
@@ -138,13 +139,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 2 }}>Painel do comerciante</div>
           </div>
 
-          <nav style={{ flex: 1, padding: "0 8px" }}>
-            {NAV.map(({ href, icon, label }) => (
-              <Link key={href} href={href} className="dash-nav-item">
-                <span>{icon}</span><span>{label}</span>
-              </Link>
-            ))}
-          </nav>
+          <DashboardSidebarClient />
 
           <div style={{ padding: "1rem", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 10 }}>
             <UserButton afterSignOutUrl="/" />
