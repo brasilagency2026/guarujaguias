@@ -1,13 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useConvexClient } from "convex/react";
+import { useEffect, useState, useMemo } from "react";
+import { ConvexHttpClient } from "convex/browser";
 import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 
 export default function DashboardPage() {
   const { isLoaded, isSignedIn } = useUser();
-  const client = useConvexClient();
+  const convexClient = useMemo(() => new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!), []);
   const [biz, setBiz] = useState<any | null>(null);
   const [loadingBiz, setLoadingBiz] = useState(true);
 
@@ -23,7 +23,7 @@ export default function DashboardPage() {
         return;
       }
       try {
-        const res = await client.query(api.businesses.getMyBusiness);
+        const res = await convexClient.query(api.businesses.getMyBusiness);
         if (!cancelled) setBiz(res);
       } catch (e) {
         console.error(e);
